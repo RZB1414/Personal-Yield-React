@@ -12,6 +12,8 @@ const Dividends = () => {
     const [showingAllPeriod, setShowingAllPeriod] = useState(false)
     const [detailedDividends, setDetailedDividends] = useState([])
     const [showingDetailed, setShowingDetailed] = useState(false)
+    const [selectedYear, setSelectedYear] = useState('')
+    const [showYearFilter, setShowYearFilter] = useState(false)
 
     useEffect(() => {
         const fetchDividends = async () => {
@@ -19,26 +21,30 @@ const Dividends = () => {
                 const unfilteredDividends = await getAllDividends()
 
                 const excludedDescriptions = [
-                "NOTA",
-                "TED RETIRADA",
-                "TED RECEBIDO",
-                "RENDIMENTO RENDA FIXA",
-                "PIS E COFINS",
-                "MULTA SALDO NEGATIVO",
-                "CARTAO DE CREDITO",
-                "CASHBACK CARTAO",
-                "IOF CASHBACK CARTAO",
-                "TRANSF ENVIADA CONTA DIGITAL",
-                "TRANSF RECEBIDA CONTA DIGITAL"
+                    "NOTA",
+                    "TED RETIRADA",
+                    "TED RECEBIDO",
+                    "RENDIMENTO RENDA FIXA",
+                    "PIS E COFINS",
+                    "MULTA SALDO NEGATIVO",
+                    "CARTAO DE CREDITO",
+                    "CASHBACK CARTAO",
+                    "IOF CASHBACK CARTAO",
+                    "TRANSF ENVIADA CONTA DIGITAL",
+                    "TRANSF RECEBIDA CONTA DIGITAL",
+                    "NEOE26",
+                    "TAEE17",
+                    "VAMO34",
+                    "CTEE29"
                 ]
 
                 // Filtra os dividendos para excluir os indesejados
-            const dividends = unfilteredDividends.filter(
-                dividend => !excludedDescriptions.includes(dividend.ticker)
-            );
+                const dividends = unfilteredDividends.filter(
+                    dividend => !excludedDescriptions.includes(dividend.ticker)
+                );
 
-            console.log('Filtered Dividends:', dividends);
-            
+                console.log('Filtered Dividends:', dividends);
+
 
                 setDividendsList(dividends)
 
@@ -73,8 +79,8 @@ const Dividends = () => {
 
     useEffect(() => {
         // Agrupa os dividendos por ticker e soma os valores
-            const grouped = groupDividendsByTicker(filteredDividends)
-            setGroupedDividends(grouped)
+        const grouped = groupDividendsByTicker(filteredDividends)
+        setGroupedDividends(grouped)
     }, [filteredDividends])
 
     // Função para agrupar dividendos por ticker e somar os valores
@@ -91,8 +97,8 @@ const Dividends = () => {
         }, {});
     };
 
-     // Funções de filtro
-     const filterByCurrentMonth = () => {
+    // Funções de filtro
+    const filterByCurrentMonth = () => {
         const now = new Date();
         const filtered = dividendsList.filter(dividend => {
             const date = new Date(dividend.liquidacao);
@@ -101,6 +107,7 @@ const Dividends = () => {
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
         setShowingDetailed(false);
+        setShowYearFilter(false);
     };
 
     const filterByCurrentYear = () => {
@@ -112,25 +119,25 @@ const Dividends = () => {
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
         setShowingDetailed(false);
+        setShowYearFilter(false);
     };
 
-    const filterByLastThreeMonths = () => {
-        const now = new Date();
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(now.getMonth() - 3);
+    const filterByYear = () => {
         const filtered = dividendsList.filter(dividend => {
             const date = new Date(dividend.liquidacao);
-            return date >= threeMonthsAgo && date <= now;
+            return date.getFullYear() === selectedYear;
         });
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
         setShowingDetailed(false);
+        setShowYearFilter(false);
     };
 
     const filterByAllTime = () => {
         setFilteredDividends(dividendsList);
         setShowingAllPeriod(true);
         setShowingDetailed(false);
+        setShowYearFilter(false);
     };
 
     const handleDetailedDividends = () => {
@@ -144,10 +151,21 @@ const Dividends = () => {
         setDetailedDividends(detailedDividendsList);
         setShowingAllPeriod(false);
         setShowingDetailed(true);
+        setShowYearFilter(false);
     }
 
     const simpleDividends = () => {
         setShowingDetailed(false);
+    }
+
+    const getAvailableYears = () => {
+        // Extrai os anos únicos da lista de dividendos
+        const years = [...new Set(dividendsList.map(dividend => new Date(dividend.liquidacao).getFullYear()))];
+        return years.sort((a, b) => b - a); // Ordena os anos em ordem decrescente
+    }
+
+    const yearFilter = () => {
+        setShowYearFilter(!showYearFilter)
     }
 
     return (
@@ -158,8 +176,8 @@ const Dividends = () => {
             {/* Botões de filtro */}
             <div className='dividends-buttons'>
                 <button onClick={filterByCurrentMonth} className='dividends-button'>This Month</button>
-                <button onClick={filterByCurrentYear} className='dividends-button'>This Year</button>
-                <button onClick={filterByLastThreeMonths} className='dividends-button'>Last 3 Months</button>
+                <button onClick={filterByCurrentYear} className='dividends-button'>This year</button>
+                <button onClick={yearFilter} className='dividends-button'>By year</button>                
                 <button onClick={filterByAllTime} className='dividends-button'>All Period</button>
             </div>
             <div className='dividends-detailed'>
@@ -167,44 +185,62 @@ const Dividends = () => {
                 <button onClick={handleDetailedDividends} className='dividends-detailed-button'>Detailed</button>
             </div>
 
+            {/* Campo de seleção de ano */}
+            {showYearFilter && (
+                <div className='dividends-year-filter'>
+                    <label htmlFor="year-select">Select Year:</label>
+                    <select
+                        id="year-select"
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                        className='dividends-year-select'
+                    >
+                        {getAvailableYears().map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
+                    <button onClick={filterByYear} className='dividends-byyear-button'>Filter by Year</button>
+                </div>
+            )}
+
             {/* Soma total */}
             <h3 className='dividends-total'>
-                Total: R$ {showingDetailed 
-                ? detailedDividends.reduce((sum, dividend) => sum + dividend.valor, 0).toFixed(2)
-                : Object.values(groupedDividends).reduce((sum, total) => sum + total, 0).toFixed(2)}
+                Total: R$ {showingDetailed
+                    ? detailedDividends.reduce((sum, dividend) => sum + dividend.valor, 0).toFixed(2)
+                    : Object.values(groupedDividends).reduce((sum, total) => sum + total, 0).toFixed(2)}
             </h3>
 
             {showingDetailed ? (
-                detailedDividends.length > 0 ?(
+                detailedDividends.length > 0 ? (
                     <ul className='dividends-list'>
-                   {detailedDividends.map((dividend, index) => (
-                           <li className='dividends-list-item' key={index}>
-                               <p>{dividend.liquidacao}</p>
-                               <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
-                               <p>{dividend.valor.toFixed(2)}</p>
-                           </li>
-                       ))}
-               </ul>
-               ) : (
-                   <p className='dividends-no-data'>No results for this period</p>
-               )) : null}
+                        {detailedDividends.map((dividend, index) => (
+                            <li className='dividends-list-item' key={index}>
+                                <p>{dividend.liquidacao}</p>
+                                <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
+                                <p>{dividend.valor.toFixed(2)}</p>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className='dividends-no-data'>No results for this period</p>
+                )) : null}
 
-            {showingDetailed ? null : 
-            Object.keys(groupedDividends).length > 0 ?(
-                 <ul className='dividends-list'>
-                {Object.entries(groupedDividends)
-                    .sort(([, totalA], [, totalB]) => totalB - totalA)
-                    .map(([ticker, total]) => (
-                        <li className='dividends-list-item' key={ticker}>
-                            <p>{ticker}</p>
-                            <p>R$ {total.toFixed(2)}</p>
-                        </li>
-                    ))}
-            </ul>
-            ) : (
-                <p className='dividends-no-data'>No results for this period</p>
-            )}
-           
+            {showingDetailed ? null :
+                Object.keys(groupedDividends).length > 0 ? (
+                    <ul className='dividends-list'>
+                        {Object.entries(groupedDividends)
+                            .sort(([, totalA], [, totalB]) => totalB - totalA)
+                            .map(([ticker, total]) => (
+                                <li className='dividends-list-item' key={ticker}>
+                                    <p>{ticker}</p>
+                                    <p>R$ {total.toFixed(2)}</p>
+                                </li>
+                            ))}
+                    </ul>
+                ) : (
+                    <p className='dividends-no-data'>No results for this period</p>
+                )}
+
         </div>
     )
 }
