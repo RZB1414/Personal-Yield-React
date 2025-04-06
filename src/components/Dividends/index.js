@@ -10,6 +10,8 @@ const Dividends = () => {
     const [overallStartDate, setOverallStartDate] = useState('')
     const [overallEndDate, setOverallEndDate] = useState('')
     const [showingAllPeriod, setShowingAllPeriod] = useState(false)
+    const [detailedDividends, setDetailedDividends] = useState([])
+    const [showingDetailed, setShowingDetailed] = useState(false)
 
     useEffect(() => {
         const fetchDividends = async () => {
@@ -75,6 +77,7 @@ const Dividends = () => {
         });
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
+        setShowingDetailed(false);
     };
 
     const filterByCurrentYear = () => {
@@ -85,6 +88,7 @@ const Dividends = () => {
         });
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
+        setShowingDetailed(false);
     };
 
     const filterByLastThreeMonths = () => {
@@ -97,12 +101,31 @@ const Dividends = () => {
         });
         setFilteredDividends(filtered);
         setShowingAllPeriod(false);
+        setShowingDetailed(false);
     };
 
     const filterByAllTime = () => {
         setFilteredDividends(dividendsList);
         setShowingAllPeriod(true);
+        setShowingDetailed(false);
     };
+
+    const handleDetailedDividends = () => {
+        const detailedDividendsList = filteredDividends.map(dividend => {
+            const date = new Date(dividend.liquidacao).toLocaleDateString('pt-BR');
+            return {
+                ...dividend,
+                liquidacao: date
+            };
+        });
+        setDetailedDividends(detailedDividendsList);
+        setShowingAllPeriod(false);
+        setShowingDetailed(true);
+    }
+
+    const simpleDividends = () => {
+        setShowingDetailed(false);
+    }
 
     return (
         <div className="dividends-container">
@@ -116,8 +139,27 @@ const Dividends = () => {
                 <button onClick={filterByLastThreeMonths} className='dividends-button'>Last 3 Months</button>
                 <button onClick={filterByAllTime} className='dividends-button'>All Period</button>
             </div>
+            <div className='dividends-detailed'>
+                <button onClick={simpleDividends} className='dividends-detailed-button'>Simple</button>
+                <button onClick={handleDetailedDividends} className='dividends-detailed-button'>Detailed</button>
+            </div>            
+            {showingDetailed ? (
+                detailedDividends.length > 0 ?(
+                    <ul className='dividends-list'>
+                   {detailedDividends.map((dividend, index) => (
+                           <li className='dividends-list-item' key={index}>
+                               <p>{dividend.liquidacao}</p>
+                               <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
+                               <p>{dividend.valor.toFixed(2)}</p>
+                           </li>
+                       ))}
+               </ul>
+               ) : (
+                   <p className='dividends-no-data'>No results for this period</p>
+               )) : null}
 
-            {Object.keys(groupedDividends).length > 0 ?(
+            {showingDetailed ? null : 
+            Object.keys(groupedDividends).length > 0 ?(
                  <ul className='dividends-list'>
                 {Object.entries(groupedDividends)
                     .sort(([, totalA], [, totalB]) => totalB - totalA)

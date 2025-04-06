@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-//const dividendsApi = axios.create({baseURL: 'http://localhost:3000'})
-const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/'})
+const dividendsApi = axios.create({baseURL: 'http://localhost:3000'})
+//const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/'})
 
 async function getAllDividends() {
     try {
