@@ -31,6 +31,12 @@
     cursor: pointer;
 }
 
+.dividends-total  {
+    font-size: 25px;
+    font-weight: 600;
+}
+
+
 .dividends-detailed {
     display: flex;
     justify-content: end;

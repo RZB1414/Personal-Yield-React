@@ -16,7 +16,30 @@ const Dividends = () => {
     useEffect(() => {
         const fetchDividends = async () => {
             try {
-                const dividends = await getAllDividends()
+                const unfilteredDividends = await getAllDividends()
+
+                const excludedDescriptions = [
+                "NOTA",
+                "TED RETIRADA",
+                "TED RECEBIDO",
+                "RENDIMENTO RENDA FIXA",
+                "PIS E COFINS",
+                "MULTA SALDO NEGATIVO",
+                "CARTAO DE CREDITO",
+                "CASHBACK CARTAO",
+                "IOF CASHBACK CARTAO",
+                "TRANSF ENVIADA CONTA DIGITAL",
+                "TRANSF RECEBIDA CONTA DIGITAL"
+                ]
+
+                // Filtra os dividendos para excluir os indesejados
+            const dividends = unfilteredDividends.filter(
+                dividend => !excludedDescriptions.includes(dividend.ticker)
+            );
+
+            console.log('Filtered Dividends:', dividends);
+            
+
                 setDividendsList(dividends)
 
                 // Calcula as datas de início e fim gerais
@@ -58,7 +81,7 @@ const Dividends = () => {
     const groupDividendsByTicker = (dividends) => {
         return dividends.reduce((acc, dividend) => {
             // Remove números do ticker usando expressão regular
-            const ticker = dividend.ticker.replace(/\d+/g, '')
+            const ticker = dividend.ticker.replace(/(?<!\d)11(?!\d)|\d+/g, match => match === '11' ? '11' : '')
             const { valor } = dividend;
             if (!acc[ticker]) {
                 acc[ticker] = 0;
@@ -142,7 +165,15 @@ const Dividends = () => {
             <div className='dividends-detailed'>
                 <button onClick={simpleDividends} className='dividends-detailed-button'>Simple</button>
                 <button onClick={handleDetailedDividends} className='dividends-detailed-button'>Detailed</button>
-            </div>            
+            </div>
+
+            {/* Soma total */}
+            <h3 className='dividends-total'>
+                Total: R$ {showingDetailed 
+                ? detailedDividends.reduce((sum, dividend) => sum + dividend.valor, 0).toFixed(2)
+                : Object.values(groupedDividends).reduce((sum, total) => sum + total, 0).toFixed(2)}
+            </h3>
+
             {showingDetailed ? (
                 detailedDividends.length > 0 ?(
                     <ul className='dividends-list'>
