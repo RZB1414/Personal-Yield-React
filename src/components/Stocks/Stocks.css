@@ -1,0 +1,147 @@
+.stocks-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.results-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.stock-data {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.stock-data-closeIcon {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.stock-data-addIcon {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 40px;
+    right: 6px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.stock-data-symbol {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 10;
+}
+
+.stock-data-price {
+    font-size: 20px;
+    font-weight: 400;
+    margin: 0 0 20px 0;
+}
+
+.stocks-container-title {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.search-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 5px;
+    position: absolute;
+    right: 10px;
+    top: 70px;
+}
+
+.close-search-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    position: absolute;
+    right: 10px;
+    top: 70px;
+}
+
+.search-input {
+    width: 50%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.search-input-button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.stocks-list-container {
+    display: flex;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.stocks-list {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+p {
+    margin: 5px;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.stock-price {
+    font-size: 16px;
+    font-weight: 400;
+    margin-left: auto;
+}
+
+.stock-edit {
+    background-color: white;
+    padding: 10px;
+}
