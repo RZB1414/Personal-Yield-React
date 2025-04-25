@@ -22,14 +22,15 @@ const Stocks = () => {
     const [loading, setLoading] = useState('Loading data...')
     const [dividendsList, setDividendsList] = useState([])
     const [updatingValues, setUpdatingValues] = useState('')
+    const [overallTotal, setOverallTotal] = useState(0)
 
-        useEffect(() => {
+    useEffect(() => {
         const fetchStocksAndUpdate = async () => {
             try {
                 // Atualiza a lista de ações
                 const stocks = await getStocksList();
                 setStocksList(stocks);
-    
+
                 // Atualiza os preços das ações
                 const updated = await Promise.all(
                     stocks.map(async (stock) => {
@@ -47,16 +48,16 @@ const Stocks = () => {
                 setLoading('');
             }
         };
-    
+
         fetchStocksAndUpdate();
     }, [stockAdded]); // Depende apenas de `stockAdded`
 
-        useEffect(() => {
+    useEffect(() => {
         const fetchDividends = async () => {
             try {
                 const dividends = await getAllDividends();
                 const dividendsList = dividends.dividends;
-    
+
                 // Agrupa os dividendos por ticker e soma os valores
                 const grouped = groupDividendsByTicker(dividendsList);
                 setDividendsList(grouped);
@@ -65,7 +66,7 @@ const Stocks = () => {
                 console.error('Error fetching dividends:', error);
             }
         };
-    
+
         fetchDividends();
     }, [stockAdded]); // Executa apenas uma vez
 
@@ -188,6 +189,7 @@ const Stocks = () => {
                     <h2>{selectedStock.symbol.replace('.SA', '')}</h2>
                     <p>Current Average Price: {selectedStock.averagePrice}</p>
                     <input
+                        className='average-price-input'
                         type="number"
                         value={newAveragePrice}
                         onChange={(e) => setNewAveragePrice(e.target.value)}
@@ -196,12 +198,13 @@ const Stocks = () => {
 
                     <p>Stock quantity: {selectedStock.stocksQuantity}</p>
                     <input
+                        className='stock-quantity-input'
                         type="number"
                         onChange={(e) => setStocksQuantity(e.target.value)}
-                        placeholder="Enter new stock quantity"
+                        placeholder="Stock quantity"
                     />
-                    <button onClick={handleUpdateStockValues}>Update values</button>
-                    <button onClick={() => setSelectedStock(null)}>Cancel</button>
+                    <button className='update-values-button' onClick={handleUpdateStockValues}>Update values</button>
+                    <button className='update-values-button' onClick={() => setSelectedStock(null)}>Cancel</button>
                     {updatingValues === '' ? null : <p className='updating-values'>{updatingValues}</p>}
                 </div>
 
@@ -312,6 +315,51 @@ const Stocks = () => {
                                                 </tr>
                                             );
                                         })}
+
+                                        {/* Adiciona a última linha com os totais */}
+                                        <tr>
+                                            <td className="sticky-column"><strong>Total</strong></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>
+                                                <strong>
+                                                    {Math.round(
+                                                        updatedStocksList.reduce((acc, stock) => {
+                                                            const priceDifference = stock.currentPrice - stock.averagePrice;
+                                                            return acc + ((priceDifference / stock.averagePrice) * 100);
+                                                        }, 0)
+                                                    )}%
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    {Math.round(
+                                                        updatedStocksList.reduce((acc, stock) => {
+                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                                            const totalPercentageDifference = (
+                                                                (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
+                                                                    (stock.averagePrice * stock.stocksQuantity)) * 100
+                                                            );
+                                                            return acc + totalPercentageDifference;
+                                                        }, 0)
+                                                    )}%
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    R${updatedStocksList.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    R${updatedStocksList.reduce((acc, stock) => {
+                                                        const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                                        return acc + dividends;
+                                                    }, 0).toFixed(2)}
+                                                </strong>
+                                            </td>
+                                            <td></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
