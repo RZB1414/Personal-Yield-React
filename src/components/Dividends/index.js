@@ -18,51 +18,28 @@ const Dividends = () => {
     useEffect(() => {
         const fetchDividends = async () => {
             try {
-                const unfilteredDividends = await getAllDividends()
-
-                const excludedDescriptions = [
-                    "NOTA",
-                    "TED RETIRADA",
-                    "TED RECEBIDO",
-                    "RENDIMENTO RENDA FIXA",
-                    "PIS E COFINS",
-                    "MULTA SALDO NEGATIVO",
-                    "CARTAO DE CREDITO",
-                    "CASHBACK CARTAO",
-                    "IOF CASHBACK CARTAO",
-                    "TRANSF ENVIADA CONTA DIGITAL",
-                    "TRANSF RECEBIDA CONTA DIGITAL",
-                    "NEOE26",
-                    "TAEE17",
-                    "VAMO34",
-                    "CTEE29"
-                ]
-
-                // Filtra os dividendos para excluir os indesejados
-                const dividends = unfilteredDividends.filter(
-                    dividend => !excludedDescriptions.includes(dividend.ticker)
-                );
+                const dividends = await getAllDividends()
 
                 console.log('Filtered Dividends:', dividends);
 
 
-                setDividendsList(dividends)
+                setDividendsList(dividends.dividends)
 
                 // Calcula as datas de início e fim gerais
-                const startDate = dividends.reduce(
+                const startDate = dividends.dividends.reduce(
                     (earliest, dividend) =>
                         new Date(dividend.liquidacao) < new Date(earliest)
                             ? dividend.liquidacao
                             : earliest,
-                    dividends[0]?.liquidacao || ''
+                    dividends.dividends[0]?.liquidacao || ''
                 );
 
-                const endDate = dividends.reduce(
+                const endDate = dividends.dividends.reduce(
                     (latest, dividend) =>
                         new Date(dividend.liquidacao) > new Date(latest)
                             ? dividend.liquidacao
                             : latest,
-                    dividends[0]?.liquidacao || ''
+                    dividends.dividends[0]?.liquidacao || ''
                 );
 
                 // Formata as datas no formato DD/MM/YYYY

@@ -58,7 +58,8 @@ async function updateStock(stock) {
 
     try {
         const response = await stocksApi.put(`/auth/updateStock/${stock._id}`, { 
-            averagePrice: stock.averagePrice
+            averagePrice: stock.averagePrice,
+            stocksQuantity: stock.stocksQuantity
          })
         return response.data
     } catch (error) {
