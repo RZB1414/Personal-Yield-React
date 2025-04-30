@@ -3,7 +3,11 @@
     width: 100%;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: center;    
+}
+
+.stocks-container-all {
+    margin-bottom: 20px;
 }
 
 .stocks-list-wrapper {
@@ -192,4 +196,14 @@
     background-color: #f4f4f4; /* Cor de fundo para a coluna fixa */
     z-index: 1; /* Garante que a coluna fixa fique acima das outras */
     border-right: 1px solid #ddd; /* Adiciona uma borda para separar a coluna fixa */
+}
+
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
 }

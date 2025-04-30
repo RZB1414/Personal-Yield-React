@@ -209,7 +209,7 @@ const Stocks = () => {
                 </div>
 
                 :
-                <div>
+                <div className="stocks-container-all">
                     <div className='stocks-list-wrapper'>
                         {searchStock ?
                             <div className="search-container">
@@ -365,8 +365,8 @@ const Stocks = () => {
                             </div>
                         ) : null}
                     </div>
+                    <h2 className='footer'>Yield Management</h2>
                 </div>
-
             }
         </>
     )
