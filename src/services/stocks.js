@@ -68,9 +68,20 @@ async function updateStock(stock) {
     }
 }
 
+async function deleteStock(stockId) {
+    try {
+        const response = await stocksApi.delete(`/auth/deleteStock/${stockId}`)
+        return response.data
+    } catch (error) {
+        console.error('Error deleting stock:', error)
+        throw error
+    }
+}
+
 export { searchStocks,
             stockData,
             addStock,
             getStocksList,
-            updateStock
+            updateStock,
+            deleteStock
         }

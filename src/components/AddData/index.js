@@ -71,7 +71,7 @@ const AddData = () => {
                         <label htmlFor="liquidacao">Liquidacao:</label>
                         <input
                             type="date"
-                            id="liquidacao"
+                            id="liquidacao"                            
                             value={liquidacao}
                             onChange={(e) => setLiquidacao(e.target.value)}
                             required

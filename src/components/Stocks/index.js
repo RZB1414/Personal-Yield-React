@@ -1,10 +1,11 @@
 import './Stocks.css';
 import { useState, useEffect } from 'react';
-import { searchStocks, stockData, addStock, getStocksList, updateStock } from '../../services/stocks';
+import { searchStocks, stockData, addStock, getStocksList, updateStock, deleteStock } from '../../services/stocks';
 import { getAllDividends } from '../../services/dividends';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
+import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
 
 const Stocks = () => {
 
@@ -178,6 +179,21 @@ const Stocks = () => {
         setResults([])
     }
 
+    const handleDeleteStock = async (id) => {
+        if (window.confirm('Are you sure you want to delete this stock?')) {
+            try {
+                await deleteStock(id)
+                setUpdatedStocksList((prevStocks) => prevStocks.filter(stock => stock._id !== id))
+                setSelectedStock(null)
+                setShowingStock(false)
+                setStock('')
+                setResults([])
+            } catch (error) {
+                console.error('Error deleting stock:', error);
+            }
+        }
+    }
+
     return (
         <>
             <h1 className="stocks-container-title">Dashboard</h1>
@@ -185,7 +201,9 @@ const Stocks = () => {
 
             {selectedStock ?
                 <div className="stock-edit">
-                    <CloseIcon className='close-search-icon' onClick={() => setSelectedStock(null)}></CloseIcon>
+                    <CloseIcon className='close-search-icon' onClick={() => setSelectedStock(null)}/>
+                    <DeleteIcon className='delete-icon' onClick={() => handleDeleteStock(selectedStock._id)}/>
+
                     <h2>{selectedStock.symbol.replace('.SA', '')}</h2>
                     <p>Current Average Price: {selectedStock.averagePrice}</p>
                     <input
