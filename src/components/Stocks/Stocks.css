@@ -28,7 +28,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
+    margin: 20px 10px 0 10px;
 }
 
 .stock-data {

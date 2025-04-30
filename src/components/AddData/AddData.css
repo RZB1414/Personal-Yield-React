@@ -1,0 +1,114 @@
+.add-data-container {
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-data-container h2 {
+    text-align: left;
+    margin-bottom: 10px;
+    font-size: 24px;
+    color: #333;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #fff;
+    transition: border-color 0.3s ease;
+}
+
+.add-transaction-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.close-card-icon {
+    width: 20px;
+    height: 20px;
+    margin-left: auto;
+}
+
+.file-upload-container {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.file-upload-label {
+    box-sizing: border-box;
+    width: 60%;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.file-upload-label:hover {
+    background-color: #0056b3;
+}
+
+.file-upload-input {
+    display: none; /* Esconde o input padrão */
+}
+
+.upload-file-button {
+    box-sizing: border-box;
+    padding: 10px 20px;
+    background-color: #007bff;
+    width: 60%;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-file-button:hover {
+    background-color: #0056b3;
+}
+
+.upload-file-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.file-upload-closebutton {
+    margin-left: auto;
+}

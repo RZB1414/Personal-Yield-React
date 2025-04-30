@@ -22,7 +22,6 @@ const Stocks = () => {
     const [loading, setLoading] = useState('Loading data...')
     const [dividendsList, setDividendsList] = useState([])
     const [updatingValues, setUpdatingValues] = useState('')
-    const [overallTotal, setOverallTotal] = useState(0)
 
     useEffect(() => {
         const fetchStocksAndUpdate = async () => {
@@ -125,6 +124,7 @@ const Stocks = () => {
             setShowingStock(false)
             setStock('')
             setResults([])
+            setSearchStock(false)
             console.log(response)
         } catch (error) {
             console.error('Error adding stock:', error);

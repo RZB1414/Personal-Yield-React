@@ -1,7 +1,12 @@
 import axios from 'axios'
 
 //const dividendsApi = axios.create({baseURL: 'http://localhost:3000'})
-const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/'})
+const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    withCredentials: false
+})
 
 async function getAllDividends() {
     try {
@@ -36,4 +41,34 @@ async function getAllDividends() {
     }
 }
 
-export { getAllDividends }
+async function createTransaction(transaction) {
+    try {
+        const response = await dividendsApi.post('/auth/createTransaction', transaction)
+        return response.data
+    } catch (error) {
+        console.error('Error creating transaction:', error)
+        throw error
+    }
+}
+
+async function readFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await dividendsApi.post('/auth/readFile', formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error reading file:', error);
+        throw error;
+    }
+}
+
+export { getAllDividends,
+         createTransaction,
+         readFile
+ }

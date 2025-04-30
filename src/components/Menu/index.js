@@ -1,5 +1,6 @@
 import './Menu.css'
 import { useNavigate } from "react-router-dom"
+import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 
 const Menu = () => {
 
@@ -7,12 +8,18 @@ const Menu = () => {
 
     return (
         <div className='stocks-container-header'>
-                <h2 onClick={() => navigate('/')}>
-                    Stocks
-                </h2>
-                <h2 onClick={() => navigate('/dividends')}>
-                    Dividends
-                </h2>
+            <h2 onClick={() => navigate('/')}>
+                Stocks
+            </h2>
+            <h2 onClick={() => navigate('/dividends')}>
+                Dividends
+            </h2>
+            <h2 onClick={() => navigate('/info')}>
+                Info
+            </h2>
+            <h2 onClick={() => navigate('/add')}>
+                <AddIcon className='add-icon' />
+            </h2>
         </div>
     )
 }

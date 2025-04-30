@@ -14,3 +14,9 @@ h2 {
     font-weight: 500;
     margin: 0;
 }
+
+.add-icon {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
