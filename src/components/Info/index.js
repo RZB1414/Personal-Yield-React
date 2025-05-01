@@ -1,231 +1,387 @@
-import './Info.css'
-import { getAllDividends } from '../../services/dividends'
-import { useEffect, useState } from 'react'
+// import './Info.css'
+// import { getAllDividends } from '../../services/dividends'
+// import { useEffect, useState } from 'react'
+
+// const Info = () => {
+
+//     const [dividendsList, setDividendsList] = useState([])
+//     const [filteredDividends, setFilteredDividends] = useState([])
+//     const [groupedDividends, setGroupedDividends] = useState({})
+//     const [overallStartDate, setOverallStartDate] = useState('')
+//     const [overallEndDate, setOverallEndDate] = useState('')
+//     const [showingAllPeriod, setShowingAllPeriod] = useState(false)
+//     const [detailedDividends, setDetailedDividends] = useState([])
+//     const [showingDetailed, setShowingDetailed] = useState(false)
+//     const [selectedYear, setSelectedYear] = useState('')
+//     const [showYearFilter, setShowYearFilter] = useState(false)
+
+//     useEffect(() => {
+//         const fetchDividends = async () => {
+//             try {
+//                 const dividends = await getAllDividends()                
+
+//                 const includedDividends = [
+//                     "NOTA",
+//                     "RENDIMENTO RENDA FIXA",
+//                     "CARTAO DE CREDITO",
+//                     "CASHBACK CARTAO"
+//                 ]
+
+//                 const dividendsFiltered = dividends.unfilteredDividends.filter(
+//                     dividend => includedDividends.includes(dividend.ticker)
+//                 )                
+
+//                 setDividendsList(dividendsFiltered)
+
+//                 // Calcula as datas de início e fim gerais
+//                 const startDate = dividendsFiltered.reduce(
+//                     (earliest, dividend) =>
+//                         new Date(dividend.liquidacao) < new Date(earliest)
+//                             ? dividend.liquidacao
+//                             : earliest,
+//                     dividends.dividends[0]?.liquidacao || ''
+//                 );
+
+//                 const endDate = dividendsFiltered.reduce(
+//                     (latest, dividend) =>
+//                         new Date(dividend.liquidacao) > new Date(latest)
+//                             ? dividend.liquidacao
+//                             : latest,
+//                     dividends.dividends[0]?.liquidacao || ''
+//                 );
+
+//                 // Formata as datas no formato DD/MM/YYYY
+//                 setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
+//                 setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
+
+//             } catch (error) {
+//                 console.error('Error fetching dividends:', error)
+//             }
+//         }
+
+//         fetchDividends()
+//     }, [])
+
+//     useEffect(() => {
+//         // Agrupa os dividendos por ticker e soma os valores
+//         const grouped = groupDividendsByTicker(filteredDividends)
+//         setGroupedDividends(grouped)
+
+//     }, [filteredDividends])
+
+//     // Função para agrupar dividendos por ticker e somar os valores
+//     const groupDividendsByTicker = (dividends) => {
+//         return dividends.reduce((acc, dividend) => {
+//             // Remove números do ticker usando expressão regular
+//             const ticker = dividend.ticker.replace(/(?<!\d)11(?!\d)|\d+/g, match => match === '11' ? '11' : '')
+//             const { valor } = dividend;
+//             if (!acc[ticker]) {
+//                 acc[ticker] = 0;
+//             }
+//             acc[ticker] += valor;
+//             return acc;
+//         }, {});
+//     };
+
+//     // Funções de filtro
+//     const filterByCurrentMonth = () => {
+//         const now = new Date();
+//         const filtered = dividendsList.filter(dividend => {
+//             const date = new Date(dividend.liquidacao);
+//             return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+//         });
+//         setFilteredDividends(filtered);
+//         setShowingAllPeriod(false);
+//         setShowingDetailed(false);
+//         setShowYearFilter(false);
+//     };
+
+//     const filterByCurrentYear = () => {
+//         const now = new Date();
+//         const filtered = dividendsList.filter(dividend => {
+//             const date = new Date(dividend.liquidacao);
+//             return date.getFullYear() === now.getFullYear();
+//         });
+//         setFilteredDividends(filtered);
+//         setShowingAllPeriod(false);
+//         setShowingDetailed(false);
+//         setShowYearFilter(false);
+//     };
+
+//     const filterByYear = () => {
+//         const filtered = dividendsList.filter(dividend => {
+//             const date = new Date(dividend.liquidacao);
+//             return date.getFullYear() === selectedYear;
+//         });
+//         setFilteredDividends(filtered);
+//         setShowingAllPeriod(false);
+//         setShowingDetailed(false);
+//         setShowYearFilter(false);
+//     };
+
+//     const filterByAllTime = () => {
+//         setFilteredDividends(dividendsList);
+//         setShowingAllPeriod(true);
+//         setShowingDetailed(false);
+//         setShowYearFilter(false);
+//     };
+
+//     const handleDetailedDividends = () => {
+//         const detailedDividendsList = filteredDividends.map(dividend => {
+//             const date = new Date(dividend.liquidacao).toLocaleDateString('pt-BR');
+//             return {
+//                 ...dividend,
+//                 liquidacao: date
+//             };
+//         });
+//         setDetailedDividends(detailedDividendsList);
+//         setShowingAllPeriod(false);
+//         setShowingDetailed(true);
+//         setShowYearFilter(false);
+//     }
+
+//     const simpleDividends = () => {
+//         setShowingDetailed(false);
+//     }
+
+//     const getAvailableYears = () => {
+//         // Extrai os anos únicos da lista de dividendos
+//         const years = [...new Set(dividendsList.map(dividend => new Date(dividend.liquidacao).getFullYear()))];
+//         return years.sort((a, b) => b - a); // Ordena os anos em ordem decrescente
+//     }
+
+//     const yearFilter = () => {
+//         setShowYearFilter(!showYearFilter)
+//     }
+
+//     return (
+//         <div className="dividends-container">
+//             <h1 className='dividends-title'>Info</h1>
+//             {showingAllPeriod ? <p>Overall Date: {overallStartDate} - {overallEndDate}</p> : null}
+
+//             {/* Botões de filtro */}
+//             <div className='dividends-buttons'>
+//                 <button onClick={filterByCurrentMonth} className='dividends-button'>This Month</button>
+//                 <button onClick={filterByCurrentYear} className='dividends-button'>This year</button>
+//                 <button onClick={yearFilter} className='dividends-button'>By year</button>
+//                 <button onClick={filterByAllTime} className='dividends-button'>All Period</button>
+//             </div>
+//             <div className='dividends-detailed'>
+//                 <button onClick={simpleDividends} className='dividends-detailed-button'>Simple</button>
+//                 <button onClick={handleDetailedDividends} className='dividends-detailed-button'>Detailed</button>
+//             </div>
+
+//             {/* Campo de seleção de ano */}
+//             {showYearFilter && (
+//                 <div className='dividends-year-filter'>
+//                     <label htmlFor="year-select">Select Year:</label>
+//                     <select
+//                         id="year-select"
+//                         value={selectedYear}
+//                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+//                         className='dividends-year-select'
+//                     >
+//                         {getAvailableYears().map(year => (
+//                             <option key={year} value={year}>{year}</option>
+//                         ))}
+//                     </select>
+//                     <button onClick={filterByYear} className='dividends-byyear-button'>Filter by Year</button>
+//                 </div>
+//             )}
+
+//             {showingDetailed ? (
+//                 detailedDividends.length > 0 ? (
+//                     <ul className='dividends-list'>
+//                         {detailedDividends.map((dividend, index) => (
+//                             <li className='dividends-list-item' key={index}>
+//                                 <p>{dividend.liquidacao}</p>
+//                                 <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
+//                                 <p>{dividend.valor.toFixed(2)}</p>
+//                             </li>
+//                         ))}
+//                     </ul>
+//                 ) : (
+//                     <p className='dividends-no-data'>No results for this period</p>
+//                 )) : null}
+
+//             {showingDetailed ? null :
+//                 Object.keys(groupedDividends).length > 0 ? (
+//                     <ul className='dividends-list'>
+//                         {Object.entries(groupedDividends)
+//                             .sort(([, totalA], [, totalB]) => totalB - totalA)
+//                             .map(([ticker, total]) => (
+//                                 <li className='dividends-list-item' key={ticker}>
+//                                     <p>{ticker}</p>
+//                                     <p>R$ {total.toFixed(2)}</p>
+//                                 </li>
+//                             ))}
+//                     </ul>
+//                 ) : (
+//                     <p className='dividends-no-data'>No results for this period</p>
+//                 )}
+
+//         </div>
+//     )
+// }
+
+// export default Info
+
+import './Info.css';
+import { getAllDividends } from '../../services/dividends';
+import { useEffect, useState } from 'react';
 
 const Info = () => {
-
-    const [dividendsList, setDividendsList] = useState([])
-    const [filteredDividends, setFilteredDividends] = useState([])
-    const [groupedDividends, setGroupedDividends] = useState({})
-    const [overallStartDate, setOverallStartDate] = useState('')
-    const [overallEndDate, setOverallEndDate] = useState('')
-    const [showingAllPeriod, setShowingAllPeriod] = useState(false)
-    const [detailedDividends, setDetailedDividends] = useState([])
-    const [showingDetailed, setShowingDetailed] = useState(false)
-    const [selectedYear, setSelectedYear] = useState('')
-    const [showYearFilter, setShowYearFilter] = useState(false)
+    const [dividendsList, setDividendsList] = useState([]);
+    const [groupedByTicker, setGroupedByTicker] = useState({});
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Inicializa com o ano atual
 
     useEffect(() => {
         const fetchDividends = async () => {
             try {
-                const dividends = await getAllDividends()                
+                const dividends = await getAllDividends();
 
                 const includedDividends = [
                     "NOTA",
-                    "TED RETIRADA",
-                    "TED RECEBIDO",
                     "RENDIMENTO RENDA FIXA",
                     "CARTAO DE CREDITO",
-                    "CASHBACK CARTAO",
-                    "TRANSF ENVIADA CONTA DIGITAL",
-                    "TRANSF RECEBIDA CONTA DIGITAL"
-                ]
+                    "CASHBACK CARTAO"
+                ];
 
-                const dividendsFiltered = dividends.unfilteredDividends.filter(
+                // Filtra os dividendos com base no includedDividends
+                const filtered = dividends.unfilteredDividends.filter(
                     dividend => includedDividends.includes(dividend.ticker)
-                )                
-
-                setDividendsList(dividendsFiltered)
-
-                // Calcula as datas de início e fim gerais
-                const startDate = dividendsFiltered.reduce(
-                    (earliest, dividend) =>
-                        new Date(dividend.liquidacao) < new Date(earliest)
-                            ? dividend.liquidacao
-                            : earliest,
-                    dividends.dividends[0]?.liquidacao || ''
                 );
 
-                const endDate = dividendsFiltered.reduce(
-                    (latest, dividend) =>
-                        new Date(dividend.liquidacao) > new Date(latest)
-                            ? dividend.liquidacao
-                            : latest,
-                    dividends.dividends[0]?.liquidacao || ''
-                );
+                setDividendsList(filtered);
 
-                // Formata as datas no formato DD/MM/YYYY
-                setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
-                setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
-
+                // Agrupa os dividendos por ticker, ano e mês
+                const grouped = groupDividendsByTicker(filtered);
+                setGroupedByTicker(grouped);
             } catch (error) {
-                console.error('Error fetching dividends:', error)
+                console.error('Error fetching dividends:', error);
             }
-        }
+        };
 
-        fetchDividends()
-    }, [])
+        fetchDividends();
+    }, [selectedYear]);
 
-    useEffect(() => {
-        // Agrupa os dividendos por ticker e soma os valores
-        const grouped = groupDividendsByTicker(filteredDividends)
-        setGroupedDividends(grouped)
-
-    }, [filteredDividends])
-
-    // Função para agrupar dividendos por ticker e somar os valores
+    // Função para agrupar dividendos por ticker, ano e mês
     const groupDividendsByTicker = (dividends) => {
-        return dividends.reduce((acc, dividend) => {
-            // Remove números do ticker usando expressão regular
-            const ticker = dividend.ticker.replace(/(?<!\d)11(?!\d)|\d+/g, match => match === '11' ? '11' : '')
-            const { valor } = dividend;
-            if (!acc[ticker]) {
-                acc[ticker] = 0;
+        const grouped = {};
+        dividends.forEach((dividend) => {
+            const date = new Date(dividend.liquidacao);
+            const year = date.getFullYear();
+            const month = date.toLocaleString('default', { month: 'long' });
+            const ticker = dividend.ticker;
+
+            if (!grouped[ticker]) {
+                grouped[ticker] = { total: 0 };
             }
-            acc[ticker] += valor;
-            return acc;
-        }, {});
-    };
 
-    // Funções de filtro
-    const filterByCurrentMonth = () => {
-        const now = new Date();
-        const filtered = dividendsList.filter(dividend => {
-            const date = new Date(dividend.liquidacao);
-            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            if (!grouped[ticker][month]) {
+                grouped[ticker][month] = 0;
+            }
+
+            if (year === selectedYear) {
+                grouped[ticker][month] += dividend.valor;
+                grouped[ticker].total += dividend.valor;
+            }
         });
-        setFilteredDividends(filtered);
-        setShowingAllPeriod(false);
-        setShowingDetailed(false);
-        setShowYearFilter(false);
+
+        return grouped;
     };
 
-    const filterByCurrentYear = () => {
-        const now = new Date();
-        const filtered = dividendsList.filter(dividend => {
-            const date = new Date(dividend.liquidacao);
-            return date.getFullYear() === now.getFullYear();
-        });
-        setFilteredDividends(filtered);
-        setShowingAllPeriod(false);
-        setShowingDetailed(false);
-        setShowYearFilter(false);
-    };
-
-    const filterByYear = () => {
-        const filtered = dividendsList.filter(dividend => {
-            const date = new Date(dividend.liquidacao);
-            return date.getFullYear() === selectedYear;
-        });
-        setFilteredDividends(filtered);
-        setShowingAllPeriod(false);
-        setShowingDetailed(false);
-        setShowYearFilter(false);
-    };
-
-    const filterByAllTime = () => {
-        setFilteredDividends(dividendsList);
-        setShowingAllPeriod(true);
-        setShowingDetailed(false);
-        setShowYearFilter(false);
-    };
-
-    const handleDetailedDividends = () => {
-        const detailedDividendsList = filteredDividends.map(dividend => {
-            const date = new Date(dividend.liquidacao).toLocaleDateString('pt-BR');
-            return {
-                ...dividend,
-                liquidacao: date
-            };
-        });
-        setDetailedDividends(detailedDividendsList);
-        setShowingAllPeriod(false);
-        setShowingDetailed(true);
-        setShowYearFilter(false);
-    }
-
-    const simpleDividends = () => {
-        setShowingDetailed(false);
-    }
-
+    // Obtém os anos disponíveis
     const getAvailableYears = () => {
-        // Extrai os anos únicos da lista de dividendos
         const years = [...new Set(dividendsList.map(dividend => new Date(dividend.liquidacao).getFullYear()))];
-        return years.sort((a, b) => b - a); // Ordena os anos em ordem decrescente
-    }
-
-    const yearFilter = () => {
-        setShowYearFilter(!showYearFilter)
-    }
+        return years.sort((a, b) => b - a); // Ordena em ordem decrescente
+    };
 
     return (
         <div className="dividends-container">
-            <h1 className='dividends-title'>Info</h1>
-            {showingAllPeriod ? <p>Overall Date: {overallStartDate} - {overallEndDate}</p> : null}
+            <h1 className='dividends-title'>Dividends by Ticker and Month</h1>
 
-            {/* Botões de filtro */}
-            <div className='dividends-buttons'>
-                <button onClick={filterByCurrentMonth} className='dividends-button'>This Month</button>
-                <button onClick={filterByCurrentYear} className='dividends-button'>This year</button>
-                <button onClick={yearFilter} className='dividends-button'>By year</button>
-                <button onClick={filterByAllTime} className='dividends-button'>All Period</button>
-            </div>
-            <div className='dividends-detailed'>
-                <button onClick={simpleDividends} className='dividends-detailed-button'>Simple</button>
-                <button onClick={handleDetailedDividends} className='dividends-detailed-button'>Detailed</button>
+            {/* Botão para selecionar o ano */}
+            <div className="year-selector">
+                <label htmlFor="year-select">Select Year:</label>
+                <select
+                    id="year-select"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="year-select"
+                >
+                    {getAvailableYears().map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                </select>
             </div>
 
-            {/* Campo de seleção de ano */}
-            {showYearFilter && (
-                <div className='dividends-year-filter'>
-                    <label htmlFor="year-select">Select Year:</label>
-                    <select
-                        id="year-select"
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                        className='dividends-year-select'
-                    >
-                        {getAvailableYears().map(year => (
-                            <option key={year} value={year}>{year}</option>
-                        ))}
-                    </select>
-                    <button onClick={filterByYear} className='dividends-byyear-button'>Filter by Year</button>
+            {Object.keys(groupedByTicker).length > 0 ? (
+                <div className="table-wrapper">
+                    <table className="stocks-table">
+                        <thead>
+                            <tr>
+                                <th className="sticky-column">Ticker</th>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <th key={month}>{month}</th>
+                                ))}
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {/* Linha 1: NOTA */}
+                            <tr>
+                                <td className="sticky-column">Nota</td>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <td className='month-cell' key={month}>{groupedByTicker["NOTA"]?.[month] ? `R$ ${groupedByTicker["NOTA"][month].toFixed(2)}` : '-' }</td>
+                                ))}
+                                <td className='month-cell-total'>{groupedByTicker["NOTA"]?.total ? `R$ ${groupedByTicker["NOTA"].total.toFixed(2)}` : '-'}</td>
+                            </tr>
+
+                            {/* Linha 2: RENDIMENTO RENDA FIXA */}
+                            <tr>
+                                <td className="sticky-column">Rendimento Renda Fixa</td>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <td className='month-cell' key={month}>{groupedByTicker["RENDIMENTO RENDA FIXA"]?.[month] ? `R$ ${groupedByTicker["RENDIMENTO RENDA FIXA"][month].toFixed(2)}` : '-'}</td>
+                                ))}
+                                <td className='month-cell-total'>{groupedByTicker["RENDIMENTO RENDA FIXA"]?.total ? `R$ ${groupedByTicker["RENDIMENTO RENDA FIXA"].total.toFixed(2)}` : '-'}</td>
+                            </tr>
+
+                            {/* Linha 3: CARTAO DE CREDITO */}
+                            <tr>
+                                <td className="sticky-column">Cartão XP</td>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <td className='month-cell' key={month}>{groupedByTicker["CARTAO DE CREDITO"]?.[month] ? `R$ ${groupedByTicker["CARTAO DE CREDITO"][month].toFixed(2)}` : '-'}</td>
+                                ))}
+                                <td className='month-cell-total'>{groupedByTicker["CARTAO DE CREDITO"]?.total ? `R$ ${groupedByTicker["CARTAO DE CREDITO"].total.toFixed(2)}` : '-'}</td>
+                            </tr>
+
+                            {/* Linha 4: CASHBACK CARTAO */}
+                            <tr>
+                                <td className="sticky-column">Cashback Cartão</td>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <td className='month-cell' key={month}>{groupedByTicker["CASHBACK CARTAO"]?.[month] ? `R$ ${groupedByTicker["CASHBACK CARTAO"][month].toFixed(2)}` : '-'}</td>
+                                ))}
+                                <td className='month-cell-total'>{groupedByTicker["CASHBACK CARTAO"]?.total ? `R$ ${groupedByTicker["CASHBACK CARTAO"].total.toFixed(2)}` : '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            ) : (
+                <p className='dividends-no-data'>No data available for {selectedYear}</p>
             )}
-
-            {showingDetailed ? (
-                detailedDividends.length > 0 ? (
-                    <ul className='dividends-list'>
-                        {detailedDividends.map((dividend, index) => (
-                            <li className='dividends-list-item' key={index}>
-                                <p>{dividend.liquidacao}</p>
-                                <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
-                                <p>{dividend.valor.toFixed(2)}</p>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className='dividends-no-data'>No results for this period</p>
-                )) : null}
-
-            {showingDetailed ? null :
-                Object.keys(groupedDividends).length > 0 ? (
-                    <ul className='dividends-list'>
-                        {Object.entries(groupedDividends)
-                            .sort(([, totalA], [, totalB]) => totalB - totalA)
-                            .map(([ticker, total]) => (
-                                <li className='dividends-list-item' key={ticker}>
-                                    <p>{ticker}</p>
-                                    <p>R$ {total.toFixed(2)}</p>
-                                </li>
-                            ))}
-                    </ul>
-                ) : (
-                    <p className='dividends-no-data'>No results for this period</p>
-                )}
-
         </div>
-    )
-}
+    );
+};
 
-export default Info
+export default Info;

@@ -1,0 +1,81 @@
+.dividends-container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow-x: auto; /* Permite rolagem horizontal */
+}
+
+.dividends-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.year-selector {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.year-selector label {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.year-select {
+    padding: 5px 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Permite rolagem horizontal */
+    -webkit-overflow-scrolling: touch; /* Suaviza a rolagem em dispositivos móveis */
+}
+
+.stocks-table {
+    min-width: 100%; /* Garante que a tabela ocupe pelo menos 100% da largura */
+    border-collapse: collapse;
+    font-size: 16px;
+    text-align: left;
+}
+
+.stocks-table th, .stocks-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.stocks-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.stocks-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.stocks-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.sticky-column {
+    position: sticky;
+    left: 0;
+    background-color: #f4f4f4; /* Cor de fundo para a coluna fixa */
+    z-index: 1; /* Garante que a coluna fixa fique acima das outras */
+    border-right: 1px solid #ddd; /* Adiciona uma borda para separar a coluna fixa */
+}
+
+.month-cell {
+    white-space: nowrap; /* Impede a quebra de linha no conteúdo da célula */
+    text-align: left;
+}
+
+.month-cell-total {
+    font-weight: 500;
+    background-color: #e0e0e0; /* Cor de fundo para a célula total */
+    white-space: nowrap;
+}
