@@ -1,6 +1,6 @@
 import './Dividends.css'
-import { getAllDividends } from '../../services/dividends'
 import { useEffect, useState } from 'react'
+import { dividends } from '../Connect'
 
 const Dividends = () => {
 
@@ -16,42 +16,30 @@ const Dividends = () => {
     const [showYearFilter, setShowYearFilter] = useState(false)
 
     useEffect(() => {
-        const fetchDividends = async () => {
-            try {
-                const dividends = await getAllDividends()
 
-                console.log('Filtered Dividends:', dividends);
+        setDividendsList(dividends.dividends)
 
+        // Calcula as datas de início e fim gerais
+        const startDate = dividends.dividends.reduce(
+            (earliest, dividend) =>
+                new Date(dividend.liquidacao) < new Date(earliest)
+                    ? dividend.liquidacao
+                    : earliest,
+            dividends.dividends[0]?.liquidacao || ''
+        );
 
-                setDividendsList(dividends.dividends)
+        const endDate = dividends.dividends.reduce(
+            (latest, dividend) =>
+                new Date(dividend.liquidacao) > new Date(latest)
+                    ? dividend.liquidacao
+                    : latest,
+            dividends.dividends[0]?.liquidacao || ''
+        );
 
-                // Calcula as datas de início e fim gerais
-                const startDate = dividends.dividends.reduce(
-                    (earliest, dividend) =>
-                        new Date(dividend.liquidacao) < new Date(earliest)
-                            ? dividend.liquidacao
-                            : earliest,
-                    dividends.dividends[0]?.liquidacao || ''
-                );
+        // Formata as datas no formato DD/MM/YYYY
+        setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
+        setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
 
-                const endDate = dividends.dividends.reduce(
-                    (latest, dividend) =>
-                        new Date(dividend.liquidacao) > new Date(latest)
-                            ? dividend.liquidacao
-                            : latest,
-                    dividends.dividends[0]?.liquidacao || ''
-                );
-
-                // Formata as datas no formato DD/MM/YYYY
-                setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
-                setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
-
-            } catch (error) {
-                console.error('Error fetching dividends:', error)
-            }
-        }
-
-        fetchDividends()
     }, [])
 
     useEffect(() => {
@@ -154,7 +142,7 @@ const Dividends = () => {
             <div className='dividends-buttons'>
                 <button onClick={filterByCurrentMonth} className='dividends-button'>This Month</button>
                 <button onClick={filterByCurrentYear} className='dividends-button'>This year</button>
-                <button onClick={yearFilter} className='dividends-button'>By year</button>                
+                <button onClick={yearFilter} className='dividends-button'>By year</button>
                 <button onClick={filterByAllTime} className='dividends-button'>All Period</button>
             </div>
             <div className='dividends-detailed'>

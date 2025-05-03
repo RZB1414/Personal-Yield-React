@@ -1,74 +1,35 @@
 import './Stocks.css';
 import { useState, useEffect } from 'react';
-import { searchStocks, stockData, addStock, getStocksList, updateStock, deleteStock } from '../../services/stocks';
-import { getAllDividends } from '../../services/dividends';
+import { searchStocks, stockData, addStock, updateStock, deleteStock } from '../../services/stocks';
+import { stocks, updated, dividends } from '../Connect';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
 
-const Stocks = () => {
+const Stocks = ({ setStockAdded }) => {
 
     const [stock, setStock] = useState('');
     const [results, setResults] = useState([]);
     const [stockClicked, setStockClicked] = useState([]);
     const [showingStock, setShowingStock] = useState(false);
     const [stocksList, setStocksList] = useState([]);
-    const [stockAdded, setStockAdded] = useState(0)
     const [updatedStocksList, setUpdatedStocksList] = useState([])
     const [selectedStock, setSelectedStock] = useState(null)
     const [newAveragePrice, setNewAveragePrice] = useState('')
     const [stocksQuantity, setStocksQuantity] = useState(0)
     const [searchStock, setSearchStock] = useState(false)
-    const [loading, setLoading] = useState('Loading data...')
     const [dividendsList, setDividendsList] = useState([])
     const [updatingValues, setUpdatingValues] = useState('')
 
     useEffect(() => {
-        const fetchStocksAndUpdate = async () => {
-            try {
-                // Atualiza a lista de ações
-                const stocks = await getStocksList();
-                setStocksList(stocks);
-
-                // Atualiza os preços das ações
-                const updated = await Promise.all(
-                    stocks.map(async (stock) => {
-                        const stockDataResult = await stockData(stock.symbol);
-                        return {
-                            ...stock,
-                            currentPrice: stockDataResult["stock info: "].currentPrice,
-                        };
-                    })
-                );
-                setUpdatedStocksList(updated);
-            } catch (error) {
-                console.error('Error fetching stocks or updating prices:', error);
-            } finally {
-                setLoading('');
-            }
-        };
-
-        fetchStocksAndUpdate();
-    }, [stockAdded]); // Depende apenas de `stockAdded`
-
-    useEffect(() => {
-        const fetchDividends = async () => {
-            try {
-                const dividends = await getAllDividends();
-                const dividendsList = dividends.dividends;
-
-                // Agrupa os dividendos por ticker e soma os valores
-                const grouped = groupDividendsByTicker(dividendsList);
-                setDividendsList(grouped);
-                console.log('Dividends List:', grouped);
-            } catch (error) {
-                console.error('Error fetching dividends:', error);
-            }
-        };
-
-        fetchDividends();
-    }, [stockAdded]); // Executa apenas uma vez
+        setStocksList(stocks)
+        setUpdatedStocksList(updated)
+        const dividendsList = dividends.dividends;
+        const grouped = groupDividendsByTicker(dividendsList)
+        setDividendsList(grouped)
+        console.log('useeffect stockssss');
+    }, [stocks])
 
     // Função para agrupar dividendos por ticker e somar os valores
     const groupDividendsByTicker = (dividends) => {
@@ -121,7 +82,8 @@ const Stocks = () => {
                 return
             }
             const response = await addStock(stockToAdd)
-            setStockAdded((prevState) => prevState + 1) // Atualiza o estado para forçar a atualização da lista de ações
+            
+            setStockAdded(prev => prev + 1)
             setShowingStock(false)
             setStock('')
             setResults([])
@@ -197,12 +159,11 @@ const Stocks = () => {
     return (
         <>
             <h1 className="stocks-container-title">Dashboard</h1>
-            {loading === 'Loading data...' ? <p className='loading'>{loading}</p> : null}
 
             {selectedStock ?
                 <div className="stock-edit">
-                    <CloseIcon className='close-search-icon' onClick={() => setSelectedStock(null)}/>
-                    <DeleteIcon className='delete-icon' onClick={() => handleDeleteStock(selectedStock._id)}/>
+                    <CloseIcon className='close-search-icon' onClick={() => setSelectedStock(null)} />
+                    <DeleteIcon className='delete-icon' onClick={() => handleDeleteStock(selectedStock._id)} />
 
                     <h2>{selectedStock.symbol.replace('.SA', '')}</h2>
                     <p>Current Average Price: {selectedStock.averagePrice}</p>
