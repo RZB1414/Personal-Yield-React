@@ -1,35 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { getBrokers, addBroker } from '../../services/brokers';
+import React, { useState } from 'react';
+import { addBroker } from '../../services/brokers';
 import './Brokers.css';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg';
-import { addTotalValue, getAllTotalValues } from '../../services/totalValues'
+import { addTotalValue } from '../../services/totalValues'
 
-const Brokers = () => {
-    const [brokers, setBrokers] = useState([]);
+const Brokers = ({ brokersData, totalValuesData }) => {
+    const [brokers, setBrokers] = useState(brokersData || []);
     const [newBrokerName, setNewBrokerName] = useState('');
     const [newBrokerCurrency, setNewBrokerCurrency] = useState('');
     const [selectedBroker, setSelectedBroker] = useState(null);
     const [isAddingBroker, setIsAddingBroker] = useState(false);
     const [isAddingTotalValue, setIsAddingTotalValue] = useState(false);
-    const [totalValues, setTotalValues] = useState([]);
-
-
-    useEffect(() => {
-        async function fetchBrokers() {
-            try {
-                const brokersData = await getBrokers();
-                const totalValuesData = await getAllTotalValues();
-                setBrokers(brokersData);
-                setTotalValues(totalValuesData);
-                console.log('Fetched brokers:', totalValuesData);
-
-            } catch (error) {
-                console.error('Error fetching brokers:', error);
-            }
-        }
-        fetchBrokers();
-    }, []);
+    const [totalValues, setTotalValues] = useState(totalValuesData || []);
 
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -86,10 +69,9 @@ const Brokers = () => {
                 broker: selectedBroker
             };
             try {
-                console.log('Adding total value:', totalValue);
-
                 await addTotalValue(totalValue);
-                console.log('Total value added:', totalValue);
+                setTotalValues([...totalValues, totalValue])
+                setIsAddingTotalValue(false)
             } catch (error) {
                 console.error('Error adding total value:', error);
             }
@@ -265,6 +247,7 @@ const Brokers = () => {
                     </tbody>
                 </table>
             </div>
+            <h2 className='footer'>Yield Management</h2>
         </>
     );
 };

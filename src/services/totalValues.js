@@ -38,7 +38,29 @@ async function addTotalValue(totalValue) {
     }
 }
 
+async function updateTotalValue(id, totalValue) {
+    try {
+        const response = await totalValuesApi.put(`/auth/updateTotalValueBroker/${id}`, totalValue)
+        return response.data
+    } catch (error) {
+        console.error('Error updating total value:', error)
+        throw error
+    }
+}
+
+async function deleteTotalValue(id) {
+    try {
+        const response = await totalValuesApi.delete(`/auth/deleteTotalValueBroker/${id}`)
+        return response.data
+    } catch (error) {
+        console.error('Error deleting total value:', error)
+        throw error
+    }
+}
+
 export { getAllTotalValues,
          getTotalValueById,
-         addTotalValue
+         addTotalValue,
+         updateTotalValue,
+         deleteTotalValue
         }

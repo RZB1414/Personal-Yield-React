@@ -2,7 +2,7 @@ import Brokers from '../Brokers';
 import './Info.css';
 import { useEffect, useState } from 'react';
 
-const Info = ({ filteredDividends, dividends }) => {
+const Info = ({ filteredDividends, dividends, brokersData, totalValuesData }) => {
 
     const [groupedByTicker, setGroupedByTicker] = useState({});
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Inicializa com o ano atual
@@ -52,8 +52,7 @@ const Info = ({ filteredDividends, dividends }) => {
         <>
 
         <div className="dividends-container">
-            <h1 className='dividends-title'>Dividends by Ticker and Month</h1>
-
+            
             {/* Botão para selecionar o ano */}
             <div className="year-selector">
                 <label htmlFor="year-select">Select Year:</label>
@@ -135,7 +134,7 @@ const Info = ({ filteredDividends, dividends }) => {
             )}
         </div>
 
-        <Brokers />
+        <Brokers brokersData={brokersData} totalValuesData={totalValuesData}/>
         </>
     );
 };

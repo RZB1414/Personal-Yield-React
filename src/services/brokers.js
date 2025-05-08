@@ -7,6 +7,7 @@ const brokersApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
     },
     withCredentials: false
 })
+
 async function getBrokers() {
     try {
         const response = await brokersApi.get('/auth/getBrokers')
