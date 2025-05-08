@@ -1,3 +1,4 @@
+import Brokers from '../Brokers';
 import './Info.css';
 import { useEffect, useState } from 'react';
 
@@ -48,6 +49,8 @@ const Info = ({ filteredDividends, dividends }) => {
     };
 
     return (
+        <>
+
         <div className="dividends-container">
             <h1 className='dividends-title'>Dividends by Ticker and Month</h1>
 
@@ -131,6 +134,9 @@ const Info = ({ filteredDividends, dividends }) => {
                 <p className='dividends-no-data'>No data available for {selectedYear}</p>
             )}
         </div>
+
+        <Brokers />
+        </>
     );
 };
 

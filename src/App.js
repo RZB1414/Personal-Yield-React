@@ -28,15 +28,6 @@ function App() {
       <div className="loading-container">
         <h1 className="loading-text">Loading your treasuries...</h1>
         <img src={dragon} alt='Loading' className='loading-image'/>
-        <p>oi</p>
-      </div>
-    );
-  }
-  // Verifica se filteredDividends e dividends estão definidos
-  if (!filteredDividends || !dividends) {
-    return (
-      <div className="loading-container">
-        <h1 className="loading-text">Loading...</h1>
       </div>
     );
   }

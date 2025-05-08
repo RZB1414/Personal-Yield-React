@@ -38,29 +38,10 @@
     text-align: center;
 }
 
-/* Estilo para o texto de carregamento dentro de uma caixa rolante */
-.loading-text-box {
-    width: 80%; /* Largura da caixa */
-    height: 100vh; /* Ocupa toda a altura da viewport */
-    overflow-y: auto; /* Permite rolagem vertical */
-    background-color: #1e1e1e; /* Fundo levemente mais claro */
-    color: #ffffff; /* Texto branco */
-    padding: 20px;
-    border-radius: 10px; /* Bordas arredondadas */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Sombra para destacar a caixa */
-    text-align: justify; /* Justifica o texto */
-}
-
-/* Estilo para o texto dentro da caixa */
 .loading-text {
-    font-size: 1.2rem;
+    font-size: 1.6rem;
     line-height: 1.8;
-    color: #dcdcdc; /* Texto cinza claro */
     margin-bottom: 20px;
-}
-
-/* Destaque para o texto em negrito */
-.loading-text strong {
     color: #ffcc00; /* Cor dourada para o texto em destaque */
 }
 
@@ -68,18 +49,4 @@
 .loading-image {
     width: 100%; /* Tamanho fixo para a imagem */
     height: auto; /* Mantém a proporção */
-}
-
-.continue-button {
-    display: block;
-    margin: 0 auto; /* Centraliza o botão */
-    padding: 12px 24px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #ffffff;
-    background-color: #007bff; /* Azul */
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
 }

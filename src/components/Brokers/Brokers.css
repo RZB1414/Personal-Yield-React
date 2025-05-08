@@ -1,0 +1,150 @@
+.broker-container {
+    display: flex;
+    flex-direction: column;
+    margin: 20px auto;
+    max-width: 600px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.broker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+}
+
+.broker-tittle {
+    text-align: center;
+    color: #333;
+}
+
+.broker-add-icon {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.broker-form {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+.broker-input {
+    width: calc(50% - 10px);
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.broker-button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.broker-label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.broker-select {
+    width: 90%;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #fff;
+}
+
+.broker-option {
+    font-size: 14px;
+}
+
+.broker-close-icon {
+    width: 20px;
+    height: 20px;
+    margin-left: auto;
+}
+
+.broker-add-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.broker-amount-container {
+    display: flex;
+    align-items: center;
+}
+
+.broker-table-wrapper {
+    width: 100%;
+    overflow-x: auto; /* Permite rolagem horizontal */
+    -webkit-overflow-scrolling: touch; /* Suaviza a rolagem em dispositivos móveis */
+}
+
+.broker-table {
+    min-width: 100%; /* Garante que a tabela ocupe pelo menos 100% da largura */
+    border-collapse: collapse;
+    font-size: 16px;
+    text-align: left;
+}
+
+.broker-table th,
+.broker-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.broker-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+    position: sticky;
+    top: 0; /* Fixa o cabeçalho no topo */
+    z-index: 2; /* Garante que o cabeçalho fique acima das células */
+}
+
+.broker-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.broker-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.broker-table td:first-child,
+.broker-table th:first-child {
+    position: sticky;
+    left: 0; /* Fixa a primeira coluna */
+    background-color: #f4f4f4; /* Cor de fundo para a coluna fixa */
+    z-index: 3; /* Garante que a coluna fixa fique acima das outras */
+    border-right: 1px solid #ddd; /* Adiciona uma borda para separar a coluna fixa */
+}
+
+.broker-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.total-row {
+    font-weight: bold;
+    background-color: #f4f4f4;
+}
+

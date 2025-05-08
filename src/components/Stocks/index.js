@@ -29,7 +29,7 @@ const Stocks = ({ setStockAdded }) => {
         const grouped = groupDividendsByTicker(dividendsList)
         setDividendsList(grouped)
         console.log('useeffect stockssss');
-    }, [stocks])
+    }, [])
 
     // Função para agrupar dividendos por ticker e somar os valores
     const groupDividendsByTicker = (dividends) => {
