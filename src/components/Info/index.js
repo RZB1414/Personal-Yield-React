@@ -9,7 +9,8 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData }) =>
 
     useEffect(() => {
         const grouped = groupDividendsByTicker(filteredDividends)
-        setGroupedByTicker(grouped)
+        setGroupedByTicker(grouped)        
+        
     }, [dividends, filteredDividends, selectedYear]);
 
 

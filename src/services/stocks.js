@@ -1,12 +1,12 @@
 import axios from "axios"
 
-//const stocksApi = axios.create({ baseURL: 'http://localhost:3000/' })
-const stocksApi = axios.create({ baseURL: 'https://api-yield.vercel.app/',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    withCredentials: false
- })
+const stocksApi = axios.create({ baseURL: 'http://localhost:3000/' })
+// const stocksApi = axios.create({ baseURL: 'https://api-yield.vercel.app/',
+//     headers: {
+//         'Content-Type': 'application/json'
+//     },
+//     withCredentials: false
+//  })
 
 async function searchStocks(search) {
     try {

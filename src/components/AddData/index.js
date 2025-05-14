@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { createTransaction, readFile } from '../../services/dividends';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 
-const AddData = () => {
+const AddData = ({ setRefresh }) => {
     const [liquidacao, setLiquidacao] = useState('');
     const [valor, setValor] = useState('');
     const [isAddingCard, setIsAddingCard] = useState(false);
@@ -50,8 +50,11 @@ const AddData = () => {
         }
 
         try {
-            const response = await readFile(selectedFile);
-            console.log('File processed successfully:', response);
+            await readFile(selectedFile)
+            setRefresh(prevRefresh => prevRefresh + 1)
+            setIsAddingDividends(false)
+            setFileName('Select a file')
+            setSelectedFile(null)
             alert('File uploaded and processed successfully!');
         } catch (error) {
             console.error('Error uploading file:', error);

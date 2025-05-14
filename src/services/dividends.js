@@ -1,16 +1,20 @@
 import axios from 'axios'
 
-//const dividendsApi = axios.create({baseURL: 'http://localhost:3000'})
-const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    withCredentials: false
-})
+const dividendsApi = axios.create({baseURL: 'http://localhost:3000'})
+// const dividendsApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+//     headers: {
+//         'Content-Type': 'application/json'
+//     },
+//     withCredentials: false
+// })
 
 async function getAllDividends() {
     try {
         const unfilteredDividends = await dividendsApi.get('/auth/getAllDividends')
+        if (!unfilteredDividends.data) {
+            console.warn('No dividends available')
+            return {unfilteredDividends: [], dividends: []}
+        }
         const excludedDescriptions = [
             "NOTA",
             "TED RETIRADA",
@@ -37,7 +41,7 @@ async function getAllDividends() {
         return {unfilteredDividends: unfilteredDividends.data, dividends}
     } catch (error) {
         console.error('Error fetching dividends:', error)
-        throw error
+        return { unfilteredDividends: [], dividends: [] }
     }
 }
 

@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { searchStocks, stockData, addStock, updateStock, deleteStock } from '../../services/stocks';
 import { stocks, updated, dividends } from '../Connect';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
-import { ReactComponent as AddIcon } from '../../assets/icons/add-icon.svg'
+import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
 
-const Stocks = ({ setStockAdded }) => {
+const Stocks = ({ fetchingAgain, setRefresh }) => {
 
     const [stock, setStock] = useState('');
     const [results, setResults] = useState([]);
@@ -28,8 +28,7 @@ const Stocks = ({ setStockAdded }) => {
         const dividendsList = dividends.dividends;
         const grouped = groupDividendsByTicker(dividendsList)
         setDividendsList(grouped)
-        console.log('useeffect stockssss');
-    }, [])
+    }, [fetchingAgain])
 
     // Função para agrupar dividendos por ticker e somar os valores
     const groupDividendsByTicker = (dividends) => {
@@ -49,7 +48,6 @@ const Stocks = ({ setStockAdded }) => {
         try {
             const searchResults = await searchStocks(stock)
             setResults(searchResults)
-            console.log(searchResults)
 
         } catch (error) {
             console.error('Error searching for stocks:', error);
@@ -82,13 +80,13 @@ const Stocks = ({ setStockAdded }) => {
                 return
             }
             const response = await addStock(stockToAdd)
-            
-            setStockAdded(prev => prev + 1)
+            setRefresh(prevRefresh => prevRefresh + 1)
+            alert(response.msg)
             setShowingStock(false)
             setStock('')
             setResults([])
             setSearchStock(false)
-            console.log(response)
+
         } catch (error) {
             console.error('Error adding stock:', error);
         }
@@ -205,9 +203,18 @@ const Stocks = ({ setStockAdded }) => {
                                     }}
                                 />
                                 <button className='search-input-button' onClick={handleSearch}>Search</button>
-                                <CloseIcon className='close-search-icon' onClick={() => setSearchStock(false)}></CloseIcon>
+                                <CloseIcon className='close-search-icon' onClick={() => {
+                                    setSearchStock(false)
+                                    setShowingStock(false)
+                                    setResults([])
+                                    setStock('')
+                                    }}></CloseIcon>
                             </div> :
-                            <SearchIcon className='search-icon' onClick={() => setSearchStock(true)}></SearchIcon>
+                            <SearchIcon className='search-icon' onClick={() => {
+                                setSearchStock(true)
+                                setStock('')
+                                setResults([])
+                            }}></SearchIcon>
                         }
 
                         <div className="results-container">

@@ -14,9 +14,10 @@ import { getAllTotalValues } from './services/totalValues';
 function App() {
 
   const [dataLoaded, setDataLoaded] = useState(false)
-  const [stockAdded, setStockAdded] = useState(0)
+  const [refresh, setRefresh] = useState(0)
   const [brokersData, setBrokerData] = useState([])
   const [totalValuesData, setTotalValuesData] = useState([])
+  const [fetchingAgain, setFetchingAgain] = useState(0)
 
   useEffect(() => {
     const loadData = async () => {
@@ -25,10 +26,13 @@ function App() {
       const brokersResult = await getBrokers();
       const totalValuesResult = await getAllTotalValues();
       setBrokerData(brokersResult);
-      setTotalValuesData(totalValuesResult);
+      setTotalValuesData(totalValuesResult)
+      setFetchingAgain(prev => prev + 1)
     }
     loadData()
-  }, [stockAdded])
+    console.log('Data loaded');
+    
+  }, [refresh])
 
   if (!dataLoaded) {
     return (
@@ -43,10 +47,10 @@ function App() {
     <BrowserRouter>
       <Menu />
       <Routes>
-        <Route path="/" element={<Stocks stockAdded={stockAdded} setStockAdded={setStockAdded}/>} />
+        <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh}/>} />
         <Route path="/dividends" element={<Dividends />} />
         <Route path="/info" element={<Info filteredDividends={filteredDividends} dividends={dividends} brokersData={brokersData} totalValuesData={totalValuesData}/>} />
-        <Route path='/add' element={<AddData />} />
+        <Route path='/add' element={<AddData setRefresh={setRefresh}/>} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
     </BrowserRouter>

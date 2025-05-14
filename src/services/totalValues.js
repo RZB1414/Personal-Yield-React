@@ -1,12 +1,12 @@
 import axios from "axios"
 
-//const totalValuesApi = axios.create({ baseURL: 'http://localhost:3000/' })
-const totalValuesApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    withCredentials: false
-})
+const totalValuesApi = axios.create({ baseURL: 'http://localhost:3000/' })
+// const totalValuesApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+//     headers: {
+//         'Content-Type': 'application/json'
+//     },
+//     withCredentials: false
+// })
 
 async function getAllTotalValues() {
     try {
@@ -38,9 +38,11 @@ async function addTotalValue(totalValue) {
     }
 }
 
-async function updateTotalValue(id, totalValue) {
+async function updateTotalValue(totalValue) {
     try {
-        const response = await totalValuesApi.put(`/auth/updateTotalValueBroker/${id}`, totalValue)
+        const response = await totalValuesApi.put(`/auth/updateTotalValueBroker/`, totalValue)
+        console.log(totalValue);
+        
         return response.data
     } catch (error) {
         console.error('Error updating total value:', error)

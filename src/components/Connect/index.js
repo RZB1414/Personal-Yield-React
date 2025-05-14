@@ -19,20 +19,28 @@ let updated = [];
                     })
                 )
 
-                const allDividends = await getAllDividends();
+                const allDividends = await getAllDividends()
+                if (allDividends && allDividends.unfilteredDividends) {
 
                 const includedDividends = [
                     "NOTA",
                     "RENDIMENTO RENDA FIXA",
                     "CARTAO DE CREDITO",
-                    "CASHBACK CARTAO"
+                    "CASHBACK CARTAO",
                 ];
+                
 
                 filteredDividends = allDividends.unfilteredDividends.filter(
                     dividend => includedDividends.includes(dividend.ticker)
                 )
                 
                 dividends = allDividends
+            }
+                else {
+                    console.warn('No dividends available');
+                    filteredDividends = []
+                    dividends = []                    
+                }
             } catch (error) {
                 console.error('Error fetching Data:', error);
             }
