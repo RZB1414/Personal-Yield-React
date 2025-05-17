@@ -1,12 +1,12 @@
 import axios from "axios"
 
-const brokersApi = axios.create({ baseURL: 'http://localhost:3000/' })
-// const brokersApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
-//     headers: {
-//         'Content-Type': 'application/json'
-//     },
-//     withCredentials: false
-// })
+//const brokersApi = axios.create({ baseURL: 'http://localhost:3000/' })
+const brokersApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    withCredentials: false
+})
 
 async function getBrokers() {
     try {
