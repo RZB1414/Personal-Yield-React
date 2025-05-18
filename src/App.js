@@ -30,7 +30,6 @@ function App() {
       setFetchingAgain(prev => prev + 1)
     }
     loadData()
-    console.log('Data loaded');
     
   }, [refresh])
 
@@ -49,7 +48,13 @@ function App() {
       <Routes>
         <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh}/>} />
         <Route path="/dividends" element={<Dividends />} />
-        <Route path="/info" element={<Info filteredDividends={filteredDividends} dividends={dividends} brokersData={brokersData} totalValuesData={totalValuesData}/>} />
+        <Route path="/info" element={<Info filteredDividends={filteredDividends} 
+                                           dividends={dividends} 
+                                           brokersData={brokersData} 
+                                           totalValuesData={totalValuesData}
+                                           fetchingAgain={fetchingAgain} 
+                                           setRefresh={setRefresh}
+                                           />} />
         <Route path='/add' element={<AddData setRefresh={setRefresh}/>} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>

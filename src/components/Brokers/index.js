@@ -3,47 +3,53 @@ import { addBroker } from '../../services/brokers';
 import './Brokers.css';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg';
-import { addTotalValue, updateTotalValue } from '../../services/totalValues'
+import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg';
+import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg';
+import { addTotalValue, deleteTotalValue } from '../../services/totalValues';
 
-const Brokers = ({ brokersData, totalValuesData }) => {
+const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) => {
     const [brokers, setBrokers] = useState(brokersData || []);
     const [newBrokerName, setNewBrokerName] = useState('');
     const [newBrokerCurrency, setNewBrokerCurrency] = useState('');
     const [selectedBroker, setSelectedBroker] = useState(null);
     const [isAddingBroker, setIsAddingBroker] = useState(false);
     const [isAddingTotalValue, setIsAddingTotalValue] = useState(false);
+    const [isSearchingTotalValue, setIsSearchingTotalValue] = useState(false);
     const [totalValues, setTotalValues] = useState(totalValuesData || []);
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [searchBroker, setSearchBroker] = useState('');
+    const [searchMonth, setSearchMonth] = useState('');
 
     useEffect(() => {
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
         setTotalValues(totalValuesData || []);
-    }, [brokersData, totalValuesData])
+
+    }, [brokersData, totalValuesData, fetchingAgain])
 
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ]
+    ];
 
-    // Obter os anos disponíveis com base nos dados
-    const availableYears = [...new Set(totalValues.map(value => new Date(value.date).getFullYear()))]
+    const availableYears = [...new Set(totalValues.map(value => new Date(value.date).getFullYear()))];
 
     const getBrokerMonthlyTotals = (broker, monthIndex, year = selectedYear) => {
-        const monthlyValues = totalValues.filter(value => {
-            const date = new Date(value.date);
+        const monthlyValue = totalValues.find(value => {
+            if (!value.date) return false;
+            const [y, m] = value.date.split('-');
             return (
                 value.broker.broker === broker &&
-                date.getMonth() === monthIndex &&
-                date.getFullYear() === year
-            )
+                Number(m) - 1 === monthIndex &&
+                Number(y) === year
+            );
         });
 
-        const totalUSD = monthlyValues.reduce((sum, value) => sum + parseFloat(value.totalValueInUSD || 0), 0);
-        const totalBRL = monthlyValues.reduce((sum, value) => sum + parseFloat(value.totalValueInBRL || 0), 0);
+        const totalUSD = monthlyValue ? parseFloat(monthlyValue.totalValueInUSD || 0) : 0;
+        const totalBRL = monthlyValue ? parseFloat(monthlyValue.totalValueInBRL || 0) : 0;
 
         return { totalUSD, totalBRL };
-    }
+    };
 
     const handleAddBroker = async () => {
         if (newBrokerName.trim() !== '' && newBrokerCurrency.trim() !== '') {
@@ -53,48 +59,50 @@ const Brokers = ({ brokersData, totalValuesData }) => {
                     currency: newBrokerCurrency,
                 };
                 const addedBroker = await addBroker(newBroker);
-                setBrokers([...brokers, addedBroker]); // Update the list with the new broker
-                setNewBrokerName('')
-                setNewBrokerCurrency('')
-                setIsAddingBroker(false)
+                setBrokers([...brokers, addedBroker]);
+                setNewBrokerName('');
+                setNewBrokerCurrency('');
+                setIsAddingBroker(false);
             } catch (error) {
                 console.error('Error adding broker:', error);
             }
         }
-    }
+    };
 
     const handleSelectBroker = (event) => {
         const selectedBrokerName = event.target.value;
         const broker = brokers.find(b => b.broker === selectedBrokerName);
         setSelectedBroker(broker)
-        console.log('Selected broker:', broker);
-    }
+    };
 
     const handleAddTotalValue = async (event) => {
         event.preventDefault();
-        const date = event.target[0].value;
+        const date = event.target[0].value; // já está no formato 'YYYY-MM-DD'
         const amountInUSD = event.target[1].value;
         const amountInBRL = event.target[2].value;
         if (date && amountInBRL && amountInUSD && selectedBroker) {
             const totalValue = {
-                date: date,
+                date: date, // envie a string, não o objeto Date
                 currency: selectedBroker.currency,
                 totalValueInBRL: amountInBRL,
                 totalValueInUSD: amountInUSD,
                 broker: selectedBroker
             };
             try {
-                const result = await addTotalValue(totalValue)
+                const result = await addTotalValue(totalValue);
+                setRefresh(prevRefresh => prevRefresh + 1)
                 alert(result.msg)
-                setTotalValues([...totalValues, totalValue])
-                setIsAddingTotalValue(false)
+                setIsAddingTotalValue(false);
+
             } catch (error) {
-                alert('Error adding total value:', error.message);
+                console.log('Error adding total value:', error);
+                
+                alert('Error adding total value:', error.msg);
             }
         } else {
             alert('Please fill in all fields and select a broker');
         }
-    }
+    };
 
     const calculateMonthlyTotals = () => {
         const monthlyTotals = months.map((_, monthIndex) => {
@@ -115,14 +123,53 @@ const Brokers = ({ brokersData, totalValuesData }) => {
         return monthlyTotals;
     };
 
+    // Função para filtrar os valores conforme busca
+    const filteredTotalValues = totalValues.filter(value => {
+        const [year, month] = value.date.split('-');
+        const matchesYear = Number(year) === selectedYear;
+        const matchesBroker = searchBroker ? value.broker.broker === searchBroker : true;
+        const matchesMonth = searchMonth ? Number(month) === Number(searchMonth) : true;
+        return matchesYear && matchesBroker && matchesMonth;
+    });
+
+    // Brokers e meses únicos para os selects
+    const uniqueBrokers = [...new Set(totalValues
+        .filter(v => Number(v.date.split('-')[0]) === selectedYear)
+        .map(v => v.broker.broker)
+    )];
+    const uniqueMonths = [...new Set(totalValues
+        .filter(v => Number(v.date.split('-')[0]) === selectedYear)
+        .map(v => Number(v.date.split('-')[1]))
+    )].sort((a, b) => a - b);
+
+    const handleDeleteTotalValue = async (event) => {
+        const id = event._id;
+        if (id) {
+            try {
+                const result = await deleteTotalValue(id)
+                setIsSearchingTotalValue(false)
+                setSearchBroker('');
+                setSearchMonth('');
+                setRefresh(prev => prev + 1)           
+                alert(result.message)
+                setRefresh(prevRefresh => prevRefresh + 1)
+            } catch (error) {
+                alert('Error deleting total value:', error.msg)
+            }
+        } else {
+            alert('Please select a total value to delete')
+        }
+    }
+
     return (
         <>
             {isAddingTotalValue ?
                 <div className='broker-container'>
                     <h2 className='broker-tittle'>Brokers</h2>
                     <CloseIcon className='broker-close-icon' onClick={() => {
-                        setIsAddingTotalValue(false) 
-                        setIsAddingBroker(false)}} />
+                        setIsAddingTotalValue(false);
+                        setIsAddingBroker(false);
+                    }} />
                     {isAddingBroker ?
                         <div className='broker-add-container'>
                             <CloseIcon className='broker-close-icon' onClick={() => setIsAddingBroker(false)} />
@@ -206,7 +253,6 @@ const Brokers = ({ brokersData, totalValuesData }) => {
                 : null
             }
 
-            {/* Select para os anos disponíveis */}
             <div className='year-selector' style={{ marginTop: '20px' }}>
                 <label className='year-select' style={{ border: 0 }} htmlFor="yearSelect">Select Year:</label>
                 <select
@@ -225,8 +271,61 @@ const Brokers = ({ brokersData, totalValuesData }) => {
 
             <div className='broker-header'>
                 <h2 className='broker-tittle'>Monthly Totals</h2>
+                <SearchIcon className='broker-search-icon' onClick={() => setIsSearchingTotalValue(true)} />
                 <AddIcon className='broker-add-icon' onClick={() => setIsAddingTotalValue(true)} />
             </div>
+
+            {isSearchingTotalValue ?
+            <div className='total-value-search'>
+                <div>
+                    <label htmlFor="searchBroker">Broker:</label>
+                    <select
+                    id="searchBroker"
+                    value={searchBroker}
+                    onChange={e => setSearchBroker(e.target.value)}
+                >
+                    <option value="">--</option>
+                    {uniqueBrokers.map((broker, idx) => (
+                        <option key={idx} value={broker}>{broker}</option>
+                    ))}
+                </select>
+                <label htmlFor="searchMonth" style={{ marginLeft: 10 }}>Month:</label>
+                <select
+                    id="searchMonth"
+                    value={searchMonth}
+                    onChange={e => setSearchMonth(e.target.value)}
+                >
+                    <option value="">--</option>
+                    {uniqueMonths.map(m => (
+                        <option key={m} value={m}>{months[m - 1]}</option>
+                    ))}
+                </select>
+                </div>
+                <CloseIcon className='broker-close-icon' onClick={() => 
+                    {setIsSearchingTotalValue(false)
+                    setSearchBroker('');
+                    setSearchMonth('');
+                    }
+                }
+                    />
+
+                <div className='broker-search-results'>
+                    {(searchBroker && searchMonth && filteredTotalValues.length > 0) ? (
+                        <ul>
+                            {filteredTotalValues.map((value, index) => (
+                                <li key={index}>
+                                    <p>{value.broker.broker} - {months[Number(value.date.split('-')[1]) - 1]} - {value.totalValueInUSD} USD / {value.totalValueInBRL} BRL</p>
+                                    <DeleteIcon className='broker-delete-icon' onClick={() => handleDeleteTotalValue(value)} />
+                                </li>
+                            ))}
+                        </ul>
+                    ) : null}
+                </div>
+            </div>
+            : null
+        }
+            
+            
 
             {totalValues ?
                 <div className='broker-table-wrapper'>
@@ -234,7 +333,6 @@ const Brokers = ({ brokersData, totalValuesData }) => {
                         <thead>
                             <tr>
                                 <th>Broker</th>
-
                                 {months.map((month, index) => (
                                     <th key={index}>{month}</th>
                                 ))}
@@ -243,186 +341,48 @@ const Brokers = ({ brokersData, totalValuesData }) => {
                         <tbody>
                             {brokers.map((broker, brokerIndex) => (
                                 <React.Fragment key={brokerIndex}>
-                                    {/* Linha com o nome do broker */}
                                     <tr>
                                         <td className='broker-name'>{broker.broker}</td>
-                                        {/* Célula vazia para alinhar com o cabeçalho */}
                                     </tr>
-                                    {/* Linha para valores em USD */}
                                     <tr>
-                                        {/* Célula vazia para alinhar com o cabeçalho */}
                                         <td>USD</td>
                                         {months.map((_, monthIndex) => {
-                                            const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex)
-                                            let prevTotalUSD = 0;
-
-                                            if (monthIndex === 0) {
-                                                // Se for janeiro, comparar com dezembro do ano anterior
-                                                const { totalUSD: prevYearTotalUSD } = getBrokerMonthlyTotals(broker.broker, 11, selectedYear - 1) || { totalUSD: 0 };
-                                                prevTotalUSD = prevYearTotalUSD;
-                                            } else {
-                                                // Comparar com o mês anterior
-                                                const { totalUSD: prevMonthTotalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex - 1) || { totalUSD: 0 };
-                                                prevTotalUSD = prevMonthTotalUSD;
-                                            }
-
-                                            const valorizationUSD = prevTotalUSD > 0 ? ((totalUSD - prevTotalUSD) / prevTotalUSD) * 100 : 0
-
-                                            const handleLongPress = (broker, monthIndex, type) => {
-                                                const timer = setTimeout(() => {
-                                                    const newValue = prompt(`Edit ${type} value for ${months[monthIndex]}:`, totalUSD.toFixed(2));
-                                                    if (newValue !== null) {
-                                                        const updatedValue = {
-                                                            broker: broker,
-                                                            monthIndex: monthIndex,
-                                                            type: type,
-                                                            newValue: parseFloat(newValue),
-                                                        };
-                                                        handleUpdateTotalValue(updatedValue);
-                                                    }
-                                                }, 500); // 500ms para considerar como clique longo
-                                        
-                                                return () => clearTimeout(timer); // Limpa o timer se o clique for solto antes
-                                            };
-                                        
-                                            const handleUpdateTotalValue = async (updatedValue) => {
-                                                try {
-                                                    const result = await updateTotalValue(updatedValue); // Chama a função de atualização
-                                                    console.log(result);
-                                                    
-                                                    alert(result.msg || 'Value updated successfully!');
-                                                    // Atualiza o estado local após a atualização
-                                                    setTotalValues((prevValues) =>
-                                                        prevValues.map((value) => {
-                                                            const date = new Date(value.date);
-                                                            if (
-                                                                value.broker.broker === updatedValue.broker &&
-                                                                date.getMonth() === updatedValue.monthIndex &&
-                                                                updatedValue.type === 'USD'
-                                                            ) {
-                                                                return { ...value, totalValueInUSD: updatedValue.newValue };
-                                                            } else if (
-                                                                value.broker.broker === updatedValue.broker &&
-                                                                date.getMonth() === updatedValue.monthIndex &&
-                                                                updatedValue.type === 'BRL'
-                                                            ) {
-                                                                return { ...value, totalValueInBRL: updatedValue.newValue };
-                                                            }
-                                                            return value;
-                                                        })
-                                                    );
-                                                } catch (error) {
-                                                    alert('Error updating value: ' + error.message);
-                                                }
-                                            }
+                                            const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             return (
-                                                <td 
-                                                    key={monthIndex}
-                                                    onMouseDown={() => handleLongPress(broker.broker, monthIndex, 'USD')}
-                                                    onMouseUp={() => clearTimeout(handleLongPress)}
-                                                    onMouseLeave={() => clearTimeout(handleLongPress)}
-                                                    onTouchStart={() => handleLongPress(broker.broker, monthIndex, 'USD')}
-                                                    onTouchEnd={() => clearTimeout(handleLongPress)}
-                                                >
+                                                <td key={monthIndex}>
                                                     {totalUSD.toFixed(2)}
-                                                    {valorizationUSD !== 0 && (
-                                                        <span className={valorizationUSD > 0 ? 'positive' : 'negative'}>
-                                                            {Math.round(valorizationUSD)}%
-                                                        </span>
-                                                    )}
                                                 </td>
                                             );
                                         })}
                                     </tr>
-                                    {/* Linha para valores em BRL */}
                                     <tr>
-                                        {/* Célula vazia para alinhar com o cabeçalho */}
                                         <td>BRL</td>
                                         {months.map((_, monthIndex) => {
-                                            const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex)
-                                            let prevTotalBRL = 0
-
-                                            if (monthIndex === 0) {
-                                                // Se for janeiro, comparar com dezembro do ano anterior
-                                                const { totalBRL: prevYearTotalBRL } = getBrokerMonthlyTotals(broker.broker, 11, selectedYear - 1) || { totalBRL: 0 };
-                                                prevTotalBRL = prevYearTotalBRL;
-                                            } else {
-                                                // Comparar com o mês anterior
-                                                const { totalBRL: prevMonthTotalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex - 1) || { totalBRL: 0 };
-                                                prevTotalBRL = prevMonthTotalBRL;
-                                            }
-
-                                            const valorizationBRL = prevTotalBRL > 0 ? ((totalBRL - prevTotalBRL) / prevTotalBRL) * 100 : 0;
+                                            const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             return (
-                                                <td key={monthIndex} >
+                                                <td key={monthIndex}>
                                                     {totalBRL.toFixed(2)}
-                                                    {valorizationBRL !== 0 && (
-                                                        <span className={valorizationBRL > 0 ? 'positive' : 'negative'}>
-                                                            {Math.round(valorizationBRL)}%
-                                                        </span>
-                                                    )}
                                                 </td>
-                                            )
+                                            );
                                         })}
                                     </tr>
                                 </React.Fragment>
                             ))}
-                            {/* Linhas de totais mensais */}
                             <tr className='total-row'>
                                 <td>Total USD</td>
-                                {calculateMonthlyTotals().map((totals, monthIndex) => {
-                                    let prevTotalUSD = 0;
-
-                                    if (monthIndex === 0) {
-                                        // Se for janeiro, comparar com dezembro do ano anterior
-                                        const prevYearTotals = calculateMonthlyTotals(selectedYear - 1);
-                                        prevTotalUSD = prevYearTotals.length > 0 ? prevYearTotals[11]?.totalUSD || 0 : 0;
-                                    } else {
-                                        // Comparar com o mês anterior
-                                        prevTotalUSD = calculateMonthlyTotals()[monthIndex - 1]?.totalUSD || 0;
-                                    }
-
-                                    const valorizationUSD = prevTotalUSD > 0 ? ((totals.totalUSD - prevTotalUSD) / prevTotalUSD) * 100 : 0;
-
-                                    return (
-                                        <td key={monthIndex}>
-                                            {totals.totalUSD.toFixed(2)}
-                                            {valorizationUSD !== 0 && (
-                                                <span className={valorizationUSD > 0 ? 'positive' : 'negative'}>
-                                                    {Math.round(valorizationUSD)}%
-                                                </span>
-                                            )}
-                                        </td>
-                                    );
-                                })}
+                                {calculateMonthlyTotals().map((totals, monthIndex) => (
+                                    <td key={monthIndex}>
+                                        {totals.totalUSD.toFixed(2)}
+                                    </td>
+                                ))}
                             </tr>
                             <tr className='total-row'>
                                 <td>Total BRL</td>
-                                {calculateMonthlyTotals().map((totals, monthIndex) => {
-                                    let prevTotalBRL = 0;
-
-                                    if (monthIndex === 0) {
-                                        // Se for janeiro, comparar com dezembro do ano anterior
-                                        const prevYearTotals = calculateMonthlyTotals(selectedYear - 1);
-                                        prevTotalBRL = prevYearTotals.length > 0 ? prevYearTotals[11]?.totalBRL || 0 : 0;
-                                    } else {
-                                        // Comparar com o mês anterior
-                                        prevTotalBRL = calculateMonthlyTotals()[monthIndex - 1]?.totalBRL || 0;
-                                    }
-
-                                    const valorizationBRL = prevTotalBRL > 0 ? ((totals.totalBRL - prevTotalBRL) / prevTotalBRL) * 100 : 0;
-
-                                    return (
-                                        <td key={monthIndex}>
-                                            {totals.totalBRL.toFixed(2)}
-                                            {valorizationBRL !== 0 && (
-                                                <span className={valorizationBRL > 0 ? 'positive' : 'negative'}>
-                                                    {Math.round(valorizationBRL)}%
-                                                </span>
-                                            )}
-                                        </td>
-                                    );
-                                })}
+                                {calculateMonthlyTotals().map((totals, monthIndex) => (
+                                    <td key={monthIndex}>
+                                        {totals.totalBRL.toFixed(2)}
+                                    </td>
+                                ))}
                             </tr>
                         </tbody>
                     </table>

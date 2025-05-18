@@ -2,7 +2,7 @@ import Brokers from '../Brokers';
 import './Info.css';
 import { useEffect, useState } from 'react';
 
-const Info = ({ filteredDividends, dividends, brokersData, totalValuesData }) => {
+const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, fetchingAgain,setRefresh }) => {
 
     const [groupedByTicker, setGroupedByTicker] = useState({});
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Inicializa com o ano atual
@@ -135,7 +135,7 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData }) =>
             )}
         </div>
 
-        <Brokers brokersData={brokersData} totalValuesData={totalValuesData}/>
+        <Brokers brokersData={brokersData} totalValuesData={totalValuesData} fetchingAgain={fetchingAgain} setRefresh={setRefresh}/>
         </>
     );
 };

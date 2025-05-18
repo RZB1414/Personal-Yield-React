@@ -10,7 +10,6 @@
 
 .broker-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-top: 20px;
     padding: 10px 20px;
@@ -24,6 +23,21 @@
 }
 
 .broker-add-icon {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.broker-search-icon {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.broker-delete-icon {
+    margin-left: auto;
     width: 30px;
     height: 30px;
     cursor: pointer;
@@ -97,13 +111,16 @@
 
 .broker-table-wrapper {
     width: 100%;
-    overflow-x: auto; /* Permite rolagem horizontal */
-    -webkit-overflow-scrolling: touch; /* Suaviza a rolagem em dispositivos móveis */
+    overflow-x: auto;
+    /* Permite rolagem horizontal */
+    -webkit-overflow-scrolling: touch;
+    /* Suaviza a rolagem em dispositivos móveis */
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
 }
 
 .broker-table {
-    min-width: 100%; /* Garante que a tabela ocupe pelo menos 100% da largura */
+    min-width: 100%;
+    /* Garante que a tabela ocupe pelo menos 100% da largura */
     border-collapse: collapse;
     font-size: 16px;
     text-align: left;
@@ -119,8 +136,10 @@
     background-color: #f4f4f4;
     font-weight: bold;
     position: sticky;
-    top: 0; /* Fixa o cabeçalho no topo */
-    z-index: 2; /* Garante que o cabeçalho fique acima das células */
+    top: 0;
+    /* Fixa o cabeçalho no topo */
+    z-index: 2;
+    /* Garante que o cabeçalho fique acima das células */
 }
 
 .broker-table tr:nth-child(even) {
@@ -134,10 +153,14 @@
 .broker-table td:first-child,
 .broker-table th:first-child {
     position: sticky;
-    left: 0; /* Fixa a primeira coluna */
-    background-color: #f4f4f4; /* Cor de fundo para a coluna fixa */
-    z-index: 3; /* Garante que a coluna fixa fique acima das outras */
-    border-right: 1px solid #ddd; /* Adiciona uma borda para separar a coluna fixa */
+    left: 0;
+    /* Fixa a primeira coluna */
+    background-color: #f4f4f4;
+    /* Cor de fundo para a coluna fixa */
+    z-index: 3;
+    /* Garante que a coluna fixa fique acima das outras */
+    border-right: 1px solid #ddd;
+    /* Adiciona uma borda para separar a coluna fixa */
 }
 
 .broker-name {
@@ -160,3 +183,56 @@
     margin-left: 5px;
 }
 
+/* Apenas para a área de busca de broker e mês e resultados da busca */
+
+.total-value-search {
+    margin: 24px 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #f7fafc;
+    padding: 16px 12px;
+    border-radius: 8px;
+}
+
+.total-value-search label {
+    font-weight: 500;
+    color: #225ea8;
+    margin-right: 4px;
+}
+
+.total-value-search select {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    font-size: 1rem;
+    margin-right: 8px;
+}
+
+.broker-search-results {
+    width: 100%;
+}
+
+.broker-search-results ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.broker-search-results li {
+    align-items: center;
+    background: #e6f7ff;
+    border-radius: 8px;
+    padding: 12px 18px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    font-size: 1rem;
+    color: #225ea8;
+    display: flex;
+}
+
+.broker-search-results p {
+    margin: 0;
+    font-size: 1.1rem;
+}
