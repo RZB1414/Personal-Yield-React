@@ -59,7 +59,7 @@ async function readFile(file) {
     const formData = new FormData();
     formData.append("file", file);
 
-    try {
+    try {        
         const response = await dividendsApi.post('/auth/readFile', formData, {
             headers: {
                 "Content-Type": "multipart/form-data",

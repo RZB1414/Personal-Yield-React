@@ -56,6 +56,7 @@ const AddData = ({ setRefresh }) => {
             setFileName('Select a file')
             setSelectedFile(null)
             alert('File uploaded and processed successfully!');
+            
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Failed to upload and process the file.');
