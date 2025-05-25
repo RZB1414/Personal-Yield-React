@@ -47,7 +47,7 @@ function App() {
       <Menu />
       <Routes>
         <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh}/>} />
-        <Route path="/dividends" element={<Dividends />} />
+        <Route path="/dividends" element={<Dividends fetchingAgain={fetchingAgain}/>} />
         <Route path="/info" element={<Info filteredDividends={filteredDividends} 
                                            dividends={dividends} 
                                            brokersData={brokersData} 

@@ -2,7 +2,7 @@ import './Dividends.css'
 import { useEffect, useState } from 'react'
 import { dividends } from '../Connect'
 
-const Dividends = () => {
+const Dividends = ({ fetchingAgain }) => {
 
     const [dividendsList, setDividendsList] = useState([])
     const [filteredDividends, setFilteredDividends] = useState([])
@@ -21,7 +21,7 @@ const Dividends = () => {
     useEffect(() => {
         if (dividends?.dividends?.length > 0) {
             setDividendsList(dividends.dividends)
-
+            
             // Calcula as datas de início e fim gerais
             const startDate = dividends.dividends.reduce(
                 (earliest, dividend) =>
@@ -45,7 +45,7 @@ const Dividends = () => {
         } else {
             setNoDividends(true)
         }
-    }, [])
+    }, [fetchingAgain])
 
     useEffect(() => {
         // Agrupa os dividendos por ticker e soma os valores
@@ -54,7 +54,7 @@ const Dividends = () => {
     }, [filteredDividends])
 
     // Função para agrupar dividendos por ticker e somar os valores
-    const groupDividendsByTicker = (dividends) => {
+    const groupDividendsByTicker = (dividends) => {        
         return dividends.reduce((acc, dividend) => {
             // Remove números do ticker usando expressão regular
             const ticker = dividend.ticker.replace(/(?<!\d)11(?!\d)|\d+/g, match => match === '11' ? '11' : '')

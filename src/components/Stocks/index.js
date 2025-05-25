@@ -28,13 +28,17 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         const dividendsList = dividends.dividends;
         const grouped = groupDividendsByTicker(dividendsList)
         setDividendsList(grouped)
+
     }, [fetchingAgain])
 
     // Função para agrupar dividendos por ticker e somar os valores
     const groupDividendsByTicker = (dividends) => {
         return dividends.reduce((acc, dividend) => {
-            // Remove números do ticker usando expressão regular
-            const ticker = dividend.ticker.replace(/(?<!\d)11(?!\d)|\d+/g, match => match === '11' ? '11' : '')
+            let ticker = dividend.ticker.replace('.SA', '');
+            // Se não termina com número, adiciona '3'
+            if (!/\d$/.test(ticker)) {
+                ticker = ticker + '3';
+            }
             const { valor } = dividend;
             if (!acc[ticker]) {
                 acc[ticker] = 0;
@@ -154,6 +158,35 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         }
     }
 
+    // Calcula o preço médio geral
+
+    const totalInvested = updatedStocksList.reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
+
+    // Calcula o preço médio geral considerando dividendos        
+    const totalCurrentValue = updatedStocksList.reduce(
+        (acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0
+    );
+
+    const percentualValorizacao = totalInvested > 0
+        ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
+        : 0;
+
+
+
+    const uniqueTickers = [...new Set(updatedStocksList.map(stock => {
+        let ticker = stock.symbol.replace('.SA', '');
+        if (!/\d$/.test(ticker)) ticker = ticker + '3';
+        return ticker;
+    }))];
+
+    const totalDividends = uniqueTickers.reduce((acc, ticker) => {
+        return acc + (dividendsList[ticker] || 0);
+    }, 0);
+
+    const totalReturnPercent = totalInvested > 0
+        ? (((totalCurrentValue + totalDividends - totalInvested) / totalInvested) * 100)
+        : 0;
+
     return (
         <>
             <h1 className="stocks-container-title">Dashboard</h1>
@@ -208,7 +241,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                     setShowingStock(false)
                                     setResults([])
                                     setStock('')
-                                    }}></CloseIcon>
+                                }}></CloseIcon>
                             </div> :
                             <SearchIcon className='search-icon' onClick={() => {
                                 setSearchStock(true)
@@ -266,7 +299,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
                                             const isPositive = priceDifference >= 0;
 
-                                            const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                            // const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
                                             const totalPercentageDifference = (
                                                 (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
                                                     (stock.averagePrice * stock.stocksQuantity)) * 100
@@ -284,10 +318,10 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                     </td>
                                                     <td>{stock.averagePrice.toFixed(2)}</td>
                                                     <td style={{ color: isPositive ? 'green' : 'red' }}>
-                                                        {Math.round(percentageDifference)}%
+                                                        {Number(percentageDifference).toFixed(2)}%
                                                     </td>
                                                     <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
-                                                        {dividends > 0 ? `${Math.round(totalPercentageDifference)}%` : 0}
+                                                        {dividends > 0 ? `${Number(totalPercentageDifference).toFixed(2)}%` : 0}
                                                     </td>
                                                     <td>
                                                         {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
@@ -309,26 +343,12 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             <td></td>
                                             <td>
                                                 <strong>
-                                                    {Math.round(
-                                                        updatedStocksList.reduce((acc, stock) => {
-                                                            const priceDifference = stock.currentPrice - stock.averagePrice;
-                                                            return acc + ((priceDifference / stock.averagePrice) * 100);
-                                                        }, 0)
-                                                    )}%
+                                                    {percentualValorizacao.toFixed(2)}%
                                                 </strong>
                                             </td>
                                             <td>
                                                 <strong>
-                                                    {Math.round(
-                                                        updatedStocksList.reduce((acc, stock) => {
-                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
-                                                            const totalPercentageDifference = (
-                                                                (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
-                                                                    (stock.averagePrice * stock.stocksQuantity)) * 100
-                                                            );
-                                                            return acc + totalPercentageDifference;
-                                                        }, 0)
-                                                    )}%
+                                                    {totalReturnPercent.toFixed(2)}%
                                                 </strong>
                                             </td>
                                             <td>
@@ -339,7 +359,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             <td>
                                                 <strong>
                                                     R${updatedStocksList.reduce((acc, stock) => {
-                                                        const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                                        // const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
+                                                        const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
                                                         return acc + dividends;
                                                     }, 0).toFixed(2)}
                                                 </strong>
