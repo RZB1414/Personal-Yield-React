@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { addBroker } from '../../services/brokers';
 import './Brokers.css';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
@@ -19,6 +19,11 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [searchBroker, setSearchBroker] = useState('');
     const [searchMonth, setSearchMonth] = useState('');
+    const [dollarRate, setDollarRate] = useState(null);
+    const [amountBRL, setAmountBRL] = useState('');
+    const [amountUSD, setAmountUSD] = useState('');
+    const [lastChanged, setLastChanged] = useState(null);
+    const timeoutRef = useRef(null);
 
     useEffect(() => {
         setSelectedYear(new Date().getFullYear());
@@ -268,7 +273,42 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                 ? ((current.totalBRL - previous.totalBRL) / Math.abs(previous.totalBRL)) * 100
                 : null;
         }
+    }
+
+    const fetchDollarRate = async (dateStr) => {
+        const [year, month, day] = dateStr.split('-');
+        const apiDate = `${year}${month}${day}`;
+        const url = `https://economia.awesomeapi.com.br/json/daily/USD-BRL/?start_date=${apiDate}&end_date=${apiDate}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data[0]) {
+            setDollarRate(parseFloat(data[0].bid.replace(',', '.')));
+        } else {
+            setDollarRate(null);
+        }
     };
+
+    // Atualiza USD quando BRL muda
+    useEffect(() => {
+        if (lastChanged === 'BRL' && dollarRate && amountBRL !== '') {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(() => {
+                setAmountUSD((parseFloat(amountBRL) / parseFloat(dollarRate)).toString());
+            }, 1000);
+        }
+        // eslint-disable-next-line
+    }, [amountBRL, dollarRate]);
+
+    // Atualiza BRL quando USD muda
+    useEffect(() => {
+        if (lastChanged === 'USD' && dollarRate && amountUSD !== '') {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(() => {
+                setAmountBRL((parseFloat(amountUSD) * parseFloat(dollarRate)).toString());
+            }, 1000);
+        }
+        // eslint-disable-next-line
+    }, [amountUSD, dollarRate]);
 
     return (
         <>
@@ -332,23 +372,43 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                             className='broker-input'
                             type="date"
                             placeholder="Date"
+                            onChange={(e) => {
+                                fetchDollarRate(e.target.value);
+                            }}
                         />
                         <div className='broker-amount-container'>
                             <input
                                 className='broker-input'
                                 type="number"
                                 placeholder="Total Amount"
+                                value={amountUSD}
+                                onChange={e => {
+                                    setAmountUSD(e.target.value);
+                                    setLastChanged('USD');
+                                }}
                             />
                             {selectedBroker ?
                                 <p>USD</p>
                                 : null
                             }
                         </div>
+
+                        {dollarRate && (
+                            <div style={{ marginTop: 8, marginLeft: 20, color: '#3182ce' }}>
+                                USD/BRL: R$ {parseFloat(dollarRate).toFixed(4)}
+                            </div>
+                        )}
+
                         <div className='broker-amount-container'>
                             <input
                                 className='broker-input'
                                 type="number"
                                 placeholder="Total Amount"
+                                value={amountBRL}
+                                onChange={e => {
+                                    setAmountBRL(e.target.value);
+                                    setLastChanged('BRL');
+                                }}
                             />
                             {selectedBroker ?
                                 <p>BRL</p>
@@ -461,10 +521,13 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                         {months.map((_, monthIndex) => {
                                             const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             const valorization = getValorization(broker.broker, monthIndex);
+                                            const color = valorization && valorization.valorizationUSD !== null
+                                                    ? valorization.valorizationUSD < 0 ? '#e53e3e' : '#3182ce'
+                                                    : '#3182ce';
                                             return (
                                                 <React.Fragment key={monthIndex}>
                                                     <td>{totalUSD.toFixed(2)}</td>
-                                                    <td style={{ fontSize: '0.95em', color: '#3182ce' }}>
+                                                    <td style={{ fontSize: '0.95em', color: color }}>
                                                         {valorization && valorization.valorizationUSD !== null
                                                             ? `${valorization.valorizationUSD.toFixed(2)}%`
                                                             : '--'}
@@ -478,10 +541,14 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                         {months.map((_, monthIndex) => {
                                             const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             const valorization = getValorization(broker.broker, monthIndex);
+                                            const color = valorization && valorization.valorizationBRL !== null
+                                                    ? valorization.valorizationBRL < 0 ? '#e53e3e' : '#3182ce'
+                                                    : '#3182ce';
                                             return (
                                                 <React.Fragment key={monthIndex}>
                                                     <td>{totalBRL.toFixed(2)}</td>
-                                                    <td style={{ fontSize: '0.95em', color: '#3182ce' }}>
+                                                    
+                                                    <td style={{ fontSize: '0.95em', color: color }}>
                                                         {valorization && valorization.valorizationBRL !== null
                                                             ? `${valorization.valorizationBRL.toFixed(2)}%`
                                                             : '--'}
