@@ -1,0 +1,34 @@
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+.home-intro {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 20px 0;
+}
+
+.home-button {
+    background: linear-gradient(90deg, #0984e3 60%, #00b894 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    margin-left: auto;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(9,132,227,0.08);
+    width: 20%;
+    margin-bottom: 20px;
+}

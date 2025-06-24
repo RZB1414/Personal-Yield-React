@@ -76,6 +76,7 @@ select {
 
 .dividends-detailed-button {
     color: black;
+    font-weight: 300;
     background-color: white;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
     border: none;
@@ -103,10 +104,33 @@ select {
 
 .dividends-list-item-ticker {
     width: 150px;
+    color: black;
 }
+
+.dividends-list-item-liquidacao {
+    color: black;
+}
+
+.dividends-list-item-valor {
+    color: black;
+}
+
+.dividends-simplelist-ticker {
+    color: black;
+}
+
+.dividends-simplelist-valor {
+    color: black;
+}
+
 .dividends-no-data {
     font-size: 20px;
     color: #888;
     text-align: center;
     margin-top: 20px;
+}
+
+.overall-date {
+    font-size: 18px;
+    color: #555;
 }

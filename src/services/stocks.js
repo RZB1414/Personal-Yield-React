@@ -5,7 +5,7 @@ const stocksApi = axios.create({ baseURL: 'https://api-yield.vercel.app/',
     headers: {
         'Content-Type': 'application/json'
     },
-    withCredentials: false
+    withCredentials: true
  })
 
 async function searchStocks(search) {

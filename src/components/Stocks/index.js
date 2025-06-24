@@ -294,47 +294,61 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {updatedStocksList.map((stock, index) => {
-                                            const priceDifference = stock.currentPrice - stock.averagePrice;
-                                            const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
-                                            const isPositive = priceDifference >= 0;
+                                        {updatedStocksList
+                                            .slice() // cria uma cópia para não alterar o estado original
+                                            .sort((a, b) => {
+                                                const dividendsA = dividendsList[a.symbol.replace('.SA', '')] || 0;
+                                                const dividendsB = dividendsList[b.symbol.replace('.SA', '')] || 0;
+                                                const totalPercA = (
+                                                    (((a.currentPrice * a.stocksQuantity + dividendsA) - (a.averagePrice * a.stocksQuantity)) /
+                                                        (a.averagePrice * a.stocksQuantity)) * 100
+                                                );
+                                                const totalPercB = (
+                                                    (((b.currentPrice * b.stocksQuantity + dividendsB) - (b.averagePrice * b.stocksQuantity)) /
+                                                        (b.averagePrice * b.stocksQuantity)) * 100
+                                                );
+                                                return totalPercB - totalPercA; // ordem decrescente
+                                            })
+                                            .map((stock, index) => {
+                                                const priceDifference = stock.currentPrice - stock.averagePrice;
+                                                const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
+                                                const isPositive = priceDifference >= 0;
 
-                                            // const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
-                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
-                                            const totalPercentageDifference = (
-                                                (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
-                                                    (stock.averagePrice * stock.stocksQuantity)) * 100
-                                            ).toFixed(2);
-                                            const isPositiveWithDividends = totalPercentageDifference >= 0;
+                                                const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
+                                                const totalPercentageDifference = (
+                                                    (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
+                                                        (stock.averagePrice * stock.stocksQuantity)) * 100
+                                                ).toFixed(2);
+                                                const isPositiveWithDividends = totalPercentageDifference >= 0;
 
-                                            const totalValue = stock.currentPrice * stock.stocksQuantity;
+                                                const totalValue = stock.currentPrice * stock.stocksQuantity;
 
-                                            return (
-                                                <tr key={index}>
-                                                    <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
-                                                    <td>
-                                                        {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                        {stock.currentPrice.toFixed(2)}
-                                                    </td>
-                                                    <td>{stock.averagePrice.toFixed(2)}</td>
-                                                    <td style={{ color: isPositive ? 'green' : 'red' }}>
-                                                        {Number(percentageDifference).toFixed(2)}%
-                                                    </td>
-                                                    <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
-                                                        {dividends > 0 ? `${Number(totalPercentageDifference).toFixed(2)}%` : 0}
-                                                    </td>
-                                                    <td>
-                                                        {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                        {totalValue.toFixed(2)}
-                                                    </td>
-                                                    <td>
-                                                        {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                        {dividends.toFixed(2)}
-                                                    </td>
-                                                    <td>{stock.stocksQuantity}</td>
-                                                </tr>
-                                            );
-                                        })}
+                                                return (
+                                                    <tr key={index}>
+                                                        <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
+                                                        <td>
+                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                            {stock.currentPrice.toFixed(2)}
+                                                        </td>
+                                                        <td>{stock.averagePrice.toFixed(2)}</td>
+                                                        <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                            {Number(percentageDifference).toFixed(2)}%
+                                                        </td>
+                                                        <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
+                                                            {dividends > 0 ? `${Number(totalPercentageDifference).toFixed(2)}%` : 0}
+                                                        </td>
+                                                        <td>
+                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                            {totalValue.toFixed(2)}
+                                                        </td>
+                                                        <td>
+                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                            {dividends.toFixed(2)}
+                                                        </td>
+                                                        <td>{stock.stocksQuantity}</td>
+                                                    </tr>
+                                                );
+                                            })}
 
                                         {/* Adiciona a última linha com os totais */}
                                         <tr>

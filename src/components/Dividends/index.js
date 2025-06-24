@@ -178,7 +178,7 @@ const Dividends = ({ fetchingAgain }) => {
                 <p className='dividends-no-data'>No Dividends To Show</p>
             ) : (
                 <>
-                    {showingAllPeriod ? <p>Overall Date: {overallStartDate} - {overallEndDate}</p> : null}
+                    {showingAllPeriod ? <p className='overall-date'>Overall Date: {overallStartDate} - {overallEndDate}</p> : null}
 
                     {/* Botões de filtro */}
                     <div className='dividends-buttons'>
@@ -245,9 +245,9 @@ const Dividends = ({ fetchingAgain }) => {
                             <ul className='dividends-list'>
                                 {detailedDividends.map((dividend, index) => (
                                     <li className='dividends-list-item' key={index}>
-                                        <p>{dividend.liquidacao}</p>
+                                        <p className='dividends-list-item-liquidacao'>{dividend.liquidacao}</p>
                                         <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
-                                        <p>{dividend.valor.toFixed(2)}</p>
+                                        <p className='dividends-list-item-valor'>{dividend.valor.toFixed(2)}</p>
                                     </li>
                                 ))}
                             </ul>
@@ -262,8 +262,8 @@ const Dividends = ({ fetchingAgain }) => {
                                     .sort(([, totalA], [, totalB]) => totalB - totalA)
                                     .map(([ticker, total]) => (
                                         <li className='dividends-list-item' key={ticker}>
-                                            <p>{ticker}</p>
-                                            <p>R$ {total.toFixed(2)}</p>
+                                            <p className='dividends-simplelist-ticker'>{ticker}</p>
+                                            <p className='dividends-simplelist-valor'>R$ {total.toFixed(2)}</p>
                                         </li>
                                     ))}
                             </ul>

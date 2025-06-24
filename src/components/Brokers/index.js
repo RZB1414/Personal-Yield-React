@@ -98,7 +98,9 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                 setRefresh(prevRefresh => prevRefresh + 1)
                 alert(result.msg)
                 setIsAddingTotalValue(false);
-
+                setAmountBRL('');
+                setAmountUSD('');
+                setDollarRate(null);
             } catch (error) {
                 console.log('Error adding total value:', error);
 
@@ -113,14 +115,6 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
         const monthlyTotals = months.map((_, monthIndex) => {
             let totalUSD = 0;
             let totalBRL = 0;
-
-            // totalValues.forEach(value => {
-            //     const date = new Date(value.date);
-            //     if (date.getMonth() === monthIndex && date.getFullYear() === selectedYear) {
-            //         totalUSD += parseFloat(value.totalValueInUSD || 0);
-            //         totalBRL += parseFloat(value.totalValueInBRL || 0);
-            //     }
-            // });
 
             totalValues.forEach(value => {
                 const [year, month] = value.date.split('-');
@@ -318,6 +312,10 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                     <CloseIcon className='broker-close-icon' onClick={() => {
                         setIsAddingTotalValue(false);
                         setIsAddingBroker(false);
+                        setSelectedBroker(null);
+                        setAmountBRL('');
+                        setAmountUSD('');
+                        setDollarRate(null);
                     }} />
                     {isAddingBroker ?
                         <div className='broker-add-container'>
@@ -522,8 +520,8 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                             const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             const valorization = getValorization(broker.broker, monthIndex);
                                             const color = valorization && valorization.valorizationUSD !== null
-                                                    ? valorization.valorizationUSD < 0 ? '#e53e3e' : '#3182ce'
-                                                    : '#3182ce';
+                                                ? valorization.valorizationUSD < 0 ? '#e53e3e' : '#3182ce'
+                                                : '#3182ce';
                                             return (
                                                 <React.Fragment key={monthIndex}>
                                                     <td>{totalUSD.toFixed(2)}</td>
@@ -542,12 +540,12 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                             const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex);
                                             const valorization = getValorization(broker.broker, monthIndex);
                                             const color = valorization && valorization.valorizationBRL !== null
-                                                    ? valorization.valorizationBRL < 0 ? '#e53e3e' : '#3182ce'
-                                                    : '#3182ce';
+                                                ? valorization.valorizationBRL < 0 ? '#e53e3e' : '#3182ce'
+                                                : '#3182ce';
                                             return (
                                                 <React.Fragment key={monthIndex}>
                                                     <td>{totalBRL.toFixed(2)}</td>
-                                                    
+
                                                     <td style={{ fontSize: '0.95em', color: color }}>
                                                         {valorization && valorization.valorizationBRL !== null
                                                             ? `${valorization.valorizationBRL.toFixed(2)}%`
