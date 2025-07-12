@@ -1,9 +1,11 @@
 import axios from 'axios'
 import * as XLSX from 'xlsx'
 import { bufferToHex, hexToBuffer } from '../utils/crypto'
-import { getAllEncryptedDividends, saveData } from './encryptedDividends'
 
-//const dividendsApi = axios.create({ baseURL: 'http://localhost:3000' })
+// const dividendsApi = axios.create({ baseURL: 'http://localhost:3000',
+//   withCredentials: true
+//  })
+
 const dividendsApi = axios.create({
     baseURL: 'https://api-yield.vercel.app/',
     headers: {
@@ -100,7 +102,6 @@ async function encryptDividends(parsedData, password) {
     return records;
 }
 
-// Descriptografa um array de dividendos criptografados
 async function decryptDividends(encryptedData, password) {
   if (!Array.isArray(encryptedData) || encryptedData.length === 0) {
     console.warn('Nenhum dado criptografado fornecido para descriptografia.')
@@ -112,52 +113,76 @@ async function decryptDividends(encryptedData, password) {
   const results = []
 
   for (const data of encryptedData) {
-    const saltHex = data.salt
-    const iv = hexToBuffer(data.iv)
-    const encryptedBuffer = hexToBuffer(data.encryptedData)
-    const storageKey = `aesKey_${saltHex}`
+    try {
+      const saltHex = data.salt
+      const iv = hexToBuffer(data.iv) // hexToBuffer já retorna Uint8Array
+      const encryptedBuffer = hexToBuffer(data.encryptedData)
+      const storageKey = `aesKey_${saltHex}`
 
-    let key = keyCache[saltHex]
-    if (!key) {
-      const storedHex = sessionStorage.getItem(storageKey)
-      if (storedHex) {
-        key = await importKeyFromHex(storedHex)
-      } else {
-        if (!password) throw new Error('Senha não disponível para desencriptar dados.')
-        const saltBuf = hexToBuffer(saltHex)
-        key = await deriveKey(password, new Uint8Array(saltBuf))
-        const keyHex = await exportKey(key)
-        if (keyHex) sessionStorage.setItem(storageKey, keyHex)
+      let key = keyCache[saltHex]
+      if (!key) {
+        const storedHex = sessionStorage.getItem(storageKey)
+        if (storedHex) {
+          key = await importKeyFromHex(storedHex)
+        } else {
+          if (!password) throw new Error('Senha não disponível para desencriptar dados.')
+          const saltBuf = hexToBuffer(saltHex) // hexToBuffer já retorna Uint8Array
+          key = await deriveKey(password, saltBuf)
+          const keyHex = await exportKey(key)
+          if (keyHex) sessionStorage.setItem(storageKey, keyHex)
+        }
+        keyCache[saltHex] = key
       }
-      keyCache[saltHex] = key
+
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv }, // NÃO faça new Uint8Array(iv)
+        key,
+        encryptedBuffer
+      )
+      const json = dec.decode(decryptedBuffer)
+      const parsed = JSON.parse(json)
+      results.push({
+        ...parsed,
+        movimentacao: parsed.movimentacao ? new Date(parsed.movimentacao) : null,
+        liquidacao: parsed.liquidacao ? new Date(parsed.liquidacao) : null
+      })
+    } catch (e) {
+      console.error('Erro ao descriptografar registro:', data, e)
+      continue
     }
-
-    const decryptedBuffer = await window.crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: new Uint8Array(iv) },
-      key,
-      encryptedBuffer
-    )
-    const json = dec.decode(decryptedBuffer)
-    const parsed = JSON.parse(json)
-    results.push({
-      ...parsed,
-      movimentacao: parsed.movimentacao ? new Date(parsed.movimentacao) : null,
-      liquidacao: parsed.liquidacao ? new Date(parsed.liquidacao) : null
-    })
   }
-
   return results
 }
 
 async function getAllDividends(userId, password) {
   try {
     const encryptedDividends = await getAllEncryptedDividends(userId)
-    if (!encryptedDividends|| encryptedDividends.data.message === 'No records found for this user') {
-      return { unfilteredDividends: [], dividends: [] }
+
+    async function getAllEncryptedDividends(id) {
+        try {
+            const response = await dividendsApi.get(`/auth/getDividendsById/${id}`)        
+            if (response) {
+                return response;
+            } else {
+                console.warn('No data received from the backend');
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching dividends:', error)
+            return error.message
+        }    
     }
 
+    console.log('encryptedDividends:', encryptedDividends);
+    
+    if (!encryptedDividends|| encryptedDividends.data.message === 'No records found for this user') {
+      return { unfilteredDividends: [], dividends: [] }
+    }   
+
     const records = encryptedDividends.data || []
-    const unfiltered = await decryptDividends(records, password)
+    
+    const unfiltered = await decryptDividends(records, password)    
+    
     if (unfiltered.length === 0) {
       return { unfilteredDividends: [], dividends: [] }
     }
@@ -171,7 +196,7 @@ async function getAllDividends(userId, password) {
 
     const dividends = unfiltered.filter(d =>
       d.lancamento !== "FRAÇÕES DE AÇÕES VIVT3" && !excluded.includes(d.ticker)
-    )
+    )    
 
     return { unfilteredDividends: unfiltered, dividends }
   } catch (error) {
@@ -240,14 +265,15 @@ async function readFile(file) {
             }
             return null;
         }
+        
 
         // Renomeia as colunas para os nomes corretos e converte datas para Date
         dataMapped = data.map(row => ({
-            movimentacao: convertExcelDateToDate(row["Movimentação"] || row["__EMPTY_1"]),
-            liquidacao: convertExcelDateToDate(row["Liquidação"] || row["__EMPTY_2"]),
-            lancamento: row["Lançamento"] || row["__EMPTY_3"],
-            valor: parseFloat(row["Valor (R$)"] || row["__EMPTY_5"]) || 0,
-            ticker: extractTicker(row["Lançamento"] || row["__EMPTY_3"])
+            movimentacao: convertExcelDateToDate(row["Movimentação"] || row["__EMPTY"]),
+            liquidacao: convertExcelDateToDate(row["Liquidação"] || row["__EMPTY_1"]),
+            lancamento: row["Lançamento"] || row["__EMPTY_2"],
+            valor: parseFloat(row["Valor (R$)"] || row["__EMPTY_4"]) || 0,
+            ticker: extractTicker(row["Lançamento"] || row["__EMPTY_2"])
         }))
 
         // Mapeamento de lançamentos permitidos para seus respectivos tickers
@@ -298,14 +324,26 @@ async function readFile(file) {
             liquidacao: item.liquidacao instanceof Date ? item.liquidacao : null
         }));
 
-        const password = sessionStorage.getItem('decryptPassword')
+        const password = sessionStorage.getItem('Password');
+        console.log('Password:', password);
 
-        if (!Array.isArray(parsedData)) throw new Error('parsedData não é array!');
-
-        // NOVO: criptografia com Web Crypto API
         const encryptedData = await encryptDividends(parsedData, password);
         
         await saveData({ records: encryptedData });
+
+        async function saveData({records}) {
+            try {
+                const response = await dividendsApi.post('/auth/save', {records})
+        
+                if (response && response.data) {
+                    console.log('resposta saveData:', response.data);
+                }
+                return response.data;
+            } catch (error) {
+                console.log('Error saving data:', error)
+                return error.message
+            }
+        }
 
     } catch (error) {
         console.error("Erro ao salvar os dados:", error);

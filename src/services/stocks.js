@@ -1,6 +1,9 @@
 import axios from "axios"
 
-//const stocksApi = axios.create({ baseURL: 'http://localhost:3000/' })
+// const stocksApi = axios.create({ baseURL: 'http://localhost:3000/',
+//     withCredentials: true
+//  })
+
 const stocksApi = axios.create({ baseURL: 'https://api-yield.vercel.app/',
     headers: {
         'Content-Type': 'application/json'
@@ -32,11 +35,7 @@ async function addStock(stock) {
     console.log('Adding stock:', stock);
     
     try {
-        const response = await stocksApi.post('/auth/addStock', { 
-            currency: stock.currency,
-            symbol: stock.symbol,
-            averagePrice: stock.averagePrice
-         })
+        const response = await stocksApi.post('/auth/addStock', stock)
         return response.data
     } catch (error) {
         console.error('Error adding stock:', error)
@@ -44,9 +43,9 @@ async function addStock(stock) {
     }
 }
 
-async function getStocksList() {
+async function getStocksList(id) {
     try {
-        const response = await stocksApi.get('/auth/getStocksList')
+        const response = await stocksApi.get(`/auth/getStocksList/${id}`)
         return response.data
     } catch (error) {
         console.error('Error listing stocks:', error)

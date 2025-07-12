@@ -1,5 +1,5 @@
 import './Stocks.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { searchStocks, stockData, addStock, updateStock, deleteStock } from '../../services/stocks';
 import { stocks, updated, dividends } from '../Connect';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
@@ -21,11 +21,13 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
     const [searchStock, setSearchStock] = useState(false)
     const [dividendsList, setDividendsList] = useState([])
     const [updatingValues, setUpdatingValues] = useState('')
+    // Ref para o input de busca
+    const searchInputRef = useRef(null);
 
     useEffect(() => {
         setStocksList(stocks)
         setUpdatedStocksList(updated)
-        const dividendsList = dividends.dividends;
+        const dividendsList = Array.isArray(dividends.dividends) ? dividends.dividends : [];
         const grouped = groupDividendsByTicker(dividendsList)
         setDividendsList(grouped)
 
@@ -71,10 +73,15 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
 
     const handleAddStock = async () => {
         try {
+            const userId = sessionStorage.getItem('userId')
+            console.log('useriddddd', userId);
+
             const stockToAdd = {
                 symbol: stockClicked.symbol,
                 currency: stockClicked.currency,
-                averagePrice: 0
+                averagePrice: 0,
+                stocksQuantity: 0,
+                userId: userId
             }
             if (stocksList.some(stock => stock.symbol === stockToAdd.symbol)) {
                 alert('Stock already exists in the list!')
@@ -83,6 +90,9 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                 setResults([])
                 return
             }
+            console.log('Adding stock controller:', stockToAdd);
+
+
             const response = await addStock(stockToAdd)
             setRefresh(prevRefresh => prevRefresh + 1)
             alert(response.msg)
@@ -92,6 +102,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
             setSearchStock(false)
 
         } catch (error) {
+            console.log('Error adding stock:', error);
+
             console.error('Error adding stock:', error);
         }
     }
@@ -111,7 +123,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                         ? {
                             ...stock,
                             averagePrice: parseFloat(newAveragePrice),
-                            stocksQuantity: parseInt(stocksQuantity)
+                            stocksQuantity: parseFloat(stocksQuantity)
                         }
                         : stock
                 );
@@ -121,7 +133,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                 await updateStock({
                     _id: selectedStock._id,
                     averagePrice: parseFloat(newAveragePrice),
-                    stocksQuantity: parseInt(stocksQuantity)
+                    stocksQuantity: parseFloat(stocksQuantity)
                 })
 
                 setSelectedStock(null); // Reseta o estado da ação selecionada
@@ -152,6 +164,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                 setShowingStock(false)
                 setStock('')
                 setResults([])
+                setRefresh(prevRefresh => prevRefresh + 1)
             } catch (error) {
                 console.error('Error deleting stock:', error);
             }
@@ -160,18 +173,30 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
 
     // Calcula o preço médio geral
 
-    const totalInvested = updatedStocksList.reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
+    const totalInvestedBRL = updatedStocksList
+        .filter(stock => stock.currency === 'BRL')
+        .reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
 
     // Calcula o preço médio geral considerando dividendos        
-    const totalCurrentValue = updatedStocksList.reduce(
-        (acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0
+    const totalCurrentValueBRL = updatedStocksList
+        .filter(stock => stock.currency === 'BRL')
+        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0
     );
 
-    const percentualValorizacao = totalInvested > 0
-        ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
+    const percentualValorizacaoBRL = totalInvestedBRL > 0
+        ? ((totalCurrentValueBRL - totalInvestedBRL) / totalInvestedBRL) * 100
         : 0;
 
-
+    // Calcula o preço médio geral das ações USD
+    const totalInvestedUSD = updatedStocksList
+        .filter(stock => stock.currency === 'USD')
+        .reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
+    const totalCurrentValueUSD = updatedStocksList
+        .filter(stock => stock.currency === 'USD')
+        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
+    const percentualValorizacaoUSD = totalInvestedUSD > 0
+        ? ((totalCurrentValueUSD - totalInvestedUSD) / totalInvestedUSD) * 100
+        : 0;
 
     const uniqueTickers = [...new Set(updatedStocksList.map(stock => {
         let ticker = stock.symbol.replace('.SA', '');
@@ -183,9 +208,12 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         return acc + (dividendsList[ticker] || 0);
     }, 0);
 
-    const totalReturnPercent = totalInvested > 0
-        ? (((totalCurrentValue + totalDividends - totalInvested) / totalInvested) * 100)
+    const totalReturnPercent = totalInvestedBRL > 0
+        ? (((totalCurrentValueBRL + totalDividends - totalInvestedBRL) / totalInvestedBRL) * 100)
         : 0;
+
+        let valorizacaoTotalBRL = 0
+        let valorizacaoTotalUSD = 0
 
     return (
         <>
@@ -234,6 +262,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             handleSearch()
                                         }
                                     }}
+                                    ref={searchInputRef}
                                 />
                                 <button className='search-input-button' onClick={handleSearch}>Search</button>
                                 <CloseIcon className='close-search-icon' onClick={() => {
@@ -247,6 +276,11 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                 setSearchStock(true)
                                 setStock('')
                                 setResults([])
+                                setTimeout(() => {
+                                    if (searchInputRef.current) {
+                                        searchInputRef.current.focus();
+                                    }
+                                }, 0);
                             }}></SearchIcon>
                         }
 
@@ -289,12 +323,14 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             <th>Stock Return</th>
                                             <th>Return & Div</th>
                                             <th>Total Value</th>
+                                            <th>Gain</th>
                                             <th>Dividends</th>
                                             <th>Stock Quantity</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {updatedStocksList
+                                            .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
                                             .slice() // cria uma cópia para não alterar o estado original
                                             .sort((a, b) => {
                                                 const dividendsA = dividendsList[a.symbol.replace('.SA', '')] || 0;
@@ -310,9 +346,14 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 return totalPercB - totalPercA; // ordem decrescente
                                             })
                                             .map((stock, index) => {
-                                                const priceDifference = stock.currentPrice - stock.averagePrice;
-                                                const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
-                                                const isPositive = priceDifference >= 0;
+
+                                                // Calcula valorização individual
+                                                const invested = stock.averagePrice * stock.stocksQuantity;
+                                                const current = stock.currentPrice * stock.stocksQuantity;
+                                                const percentageDifference = ((current - invested) / invested) * 100;
+                                                const isPositive = percentageDifference >= 0;
+                                                const valorizacaoBRL = (current - invested)
+                                                valorizacaoTotalBRL += valorizacaoBRL;
 
                                                 const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
                                                 const totalPercentageDifference = (
@@ -330,16 +371,27 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
                                                             {stock.currentPrice.toFixed(2)}
                                                         </td>
+
                                                         <td>{stock.averagePrice.toFixed(2)}</td>
+
                                                         <td style={{ color: isPositive ? 'green' : 'red' }}>
-                                                            {Number(percentageDifference).toFixed(2)}%
+                                                            {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
+                                                                ? `${Number(percentageDifference).toFixed(2)}%`
+                                                                : null}
                                                         </td>
+
                                                         <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
-                                                            {dividends > 0 ? `${Number(totalPercentageDifference).toFixed(2)}%` : 0}
+                                                            {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
+                                                                ? `${Number(totalPercentageDifference).toFixed(2)}%`
+                                                                : null}
                                                         </td>
                                                         <td>
                                                             {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
                                                             {totalValue.toFixed(2)}
+                                                        </td>
+
+                                                        <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                            {valorizacaoBRL.toFixed(2)}
                                                         </td>
                                                         <td>
                                                             {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
@@ -354,10 +406,16 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                         <tr>
                                             <td className="sticky-column"><strong>Total</strong></td>
                                             <td></td>
-                                            <td></td>
                                             <td>
                                                 <strong>
-                                                    {percentualValorizacao.toFixed(2)}%
+                                                    {updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
+                                                        .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    {percentualValorizacaoBRL.toFixed(2)}%
                                                 </strong>
                                             </td>
                                             <td>
@@ -367,16 +425,25 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             </td>
                                             <td>
                                                 <strong>
-                                                    R${updatedStocksList.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
+                                                    R${updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
+                                                        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
                                                 </strong>
                                             </td>
                                             <td>
                                                 <strong>
-                                                    R${updatedStocksList.reduce((acc, stock) => {
-                                                        // const dividends = dividendsList[stock.symbol.replace('.SA', '').replace(/[34]/g, '')] || 0;
-                                                        const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
-                                                        return acc + dividends;
-                                                    }, 0).toFixed(2)}
+                                                    {valorizacaoTotalBRL.toFixed(2)}
+                                                </strong>
+
+                                            </td>
+                                            <td>
+                                                <strong>
+                                                    R${updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
+                                                        .reduce((acc, stock) => {
+                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
+                                                            return acc + dividends;
+                                                        }, 0).toFixed(2)}
                                                 </strong>
                                             </td>
                                             <td></td>
@@ -386,7 +453,142 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                             </div>
                         ) : null}
                     </div>
-                    <h2 className='footer'>Yield Management</h2>
+
+                    <div className="stocks-container-all">
+                        <h2 className='stocks-list-title'>US Stocks</h2>
+
+                        <div className='stocks-list-container'>
+                            {updatedStocksList.length > 0 ? (
+                                <div className="table-wrapper">
+                                    <table className='stocks-table'>
+                                        <thead>
+                                            <tr>
+                                                <th className="sticky-column">Symbol</th>
+                                                <th>Current Price</th>
+                                                <th>Avg Price</th>
+                                                <th>Stock Return</th>
+                                                <th>Return & Div</th>
+                                                <th>Total Value</th>
+                                                <th>Gain</th>
+                                                <th>Dividends</th>
+                                                <th>Stock Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {updatedStocksList
+                                                .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
+                                                .slice() // cria uma cópia para não alterar o estado original
+                                                .sort((a, b) => {
+                                                    const dividendsA = dividendsList[a.symbol.replace('.SA', '')] || 0;
+                                                    const dividendsB = dividendsList[b.symbol.replace('.SA', '')] || 0;
+                                                    const totalPercA = (
+                                                        (((a.currentPrice * a.stocksQuantity + dividendsA) - (a.averagePrice * a.stocksQuantity)) /
+                                                            (a.averagePrice * a.stocksQuantity)) * 100
+                                                    );
+                                                    const totalPercB = (
+                                                        (((b.currentPrice * b.stocksQuantity + dividendsB) - (b.averagePrice * b.stocksQuantity)) /
+                                                            (b.averagePrice * b.stocksQuantity)) * 100
+                                                    );
+                                                    return totalPercB - totalPercA; // ordem decrescente
+                                                })
+                                                .map((stock, index) => {
+                                                    const priceDifference = stock.currentPrice - stock.averagePrice;
+                                                    const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
+                                                    const isPositive = priceDifference >= 0;
+
+                                                    const invested = stock.averagePrice * stock.stocksQuantity;
+                                                    const current = stock.currentPrice * stock.stocksQuantity;
+                                                    const valorizacaoUSD = (current - invested)
+                                                    valorizacaoTotalUSD += valorizacaoUSD;
+
+                                                    const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
+                                                    const totalPercentageDifference = (
+                                                        (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
+                                                            (stock.averagePrice * stock.stocksQuantity)) * 100
+                                                    ).toFixed(2);
+                                                    const isPositiveWithDividends = totalPercentageDifference >= 0;
+
+                                                    const totalValue = stock.currentPrice * stock.stocksQuantity;
+
+                                                    return (
+                                                        <tr key={index}>
+                                                            <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
+                                                            <td>
+                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                                {stock.currentPrice.toFixed(2)}
+                                                            </td>
+                                                            <td>{stock.averagePrice.toFixed(2)}</td>
+
+                                                            <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                                {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
+                                                                    ? `${Number(percentageDifference).toFixed(2)}%`
+                                                                    : null}
+                                                            </td>
+
+                                                            <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
+                                                                {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
+                                                                    ? `${Number(totalPercentageDifference).toFixed(2)}%`
+                                                                    : null}
+                                                            </td>
+                                                            <td>
+                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                                {totalValue.toFixed(2)}
+                                                            </td>
+
+                                                            <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                                {valorizacaoUSD.toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
+                                                                {dividends.toFixed(2)}
+                                                            </td>
+                                                            <td>{Number(stock.stocksQuantity)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+
+                                            {/* Adiciona a última linha com os totais */}
+                                            <tr>
+                                                <td className="sticky-column"><strong>Total</strong></td>
+                                                <td></td>
+                                                <td>
+                                                    <strong>
+                                                        {updatedStocksList
+                                                            .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
+                                                            .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <strong>
+                                                        {percentualValorizacaoUSD.toFixed(2)}%
+                                                    </strong>
+                                                </td>
+                                                <td>
+
+                                                </td>
+                                                <td>
+                                                    <strong>
+                                                        ${updatedStocksList
+                                                            .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
+                                                            .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    <strong>
+                                                        {valorizacaoTotalUSD.toFixed(2)}
+                                                    </strong>
+                                                </td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : null}
+                        </div>
+
+                        <h2 className='footer'>Yield Management</h2>
+                    </div>
                 </div>
             }
         </>

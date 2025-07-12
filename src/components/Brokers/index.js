@@ -28,8 +28,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     useEffect(() => {
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
-        setTotalValues(totalValuesData || []);
-
+        setTotalValues(totalValuesData);
     }, [brokersData, totalValuesData, fetchingAgain])
 
     const months = [
@@ -38,6 +37,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     ];
 
     const availableYears = [...new Set(totalValues.map(value => new Date(value.date).getFullYear()))];
+    
 
     const getBrokerMonthlyTotals = (broker, monthIndex, year = selectedYear) => {
         const monthlyValue = totalValues.find(value => {
@@ -58,10 +58,12 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
 
     const handleAddBroker = async () => {
         if (newBrokerName.trim() !== '' && newBrokerCurrency.trim() !== '') {
+            const userId = sessionStorage.getItem('userId');
             try {
                 const newBroker = {
                     brokerName: newBrokerName,
                     currency: newBrokerCurrency,
+                    userId: userId
                 };
                 const addedBroker = await addBroker(newBroker);
                 setBrokers([...brokers, addedBroker]);
@@ -82,6 +84,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
 
     const handleAddTotalValue = async (event) => {
         event.preventDefault();
+        const userId = sessionStorage.getItem('userId')
         const date = event.target[0].value; // já está no formato 'YYYY-MM-DD'
         const amountInUSD = event.target[1].value;
         const amountInBRL = event.target[2].value;
@@ -91,7 +94,8 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                 currency: selectedBroker.currency,
                 totalValueInBRL: amountInBRL,
                 totalValueInUSD: amountInUSD,
-                broker: selectedBroker
+                broker: selectedBroker,
+                userId: userId
             };
             try {
                 const result = await addTotalValue(totalValue);

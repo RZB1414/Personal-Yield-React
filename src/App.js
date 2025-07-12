@@ -6,13 +6,13 @@ import Stocks from './components/Stocks';
 import Info from './components/Info';
 import Menu from './components/Menu';
 import AddData from './components/AddData';
-import { fetchDividendsStocks, filteredDividends, dividends, LoginForm } from './components/Connect';
+import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
 import dragon from './assets/sleeping-dragon.png'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
-// import Login from './components/Login';
+import { getAllCreditCards } from './services/creditCards';
 
 function App() {
 
@@ -20,6 +20,7 @@ function App() {
   const [refresh, setRefresh] = useState(0)
   const [brokersData, setBrokerData] = useState([])
   const [totalValuesData, setTotalValuesData] = useState([])
+  const [cardValues, setCardValues] = useState([])
   const [fetchingAgain, setFetchingAgain] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
@@ -29,11 +30,14 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
+      const userId = sessionStorage.getItem('userId');
       const loadData = async () => {
         await fetchDividendsStocks()
         setDataLoaded(true)
-        const brokersResult = await getBrokers();
-        const totalValuesResult = await getAllTotalValues();
+        const brokersResult = await getBrokers(userId);
+        const totalValuesResult = await getAllTotalValues(userId);  
+        const cardValuesResult = await getAllCreditCards(userId);
+        setCardValues(cardValuesResult);              
         setBrokerData(brokersResult);
         setTotalValuesData(totalValuesResult)
         setFetchingAgain(prev => prev + 1)
@@ -54,7 +58,7 @@ function App() {
       )
         : (
           <>
-            <Menu />
+            <Menu setIsLoggedIn={setIsLoggedIn} />
             <Routes>
               <Route path="/home" element={<Home onLogin={handleLogin} />} />
               <Route path="/logon" element={<Logon />} />
@@ -64,10 +68,11 @@ function App() {
                 dividends={dividends}
                 brokersData={brokersData}
                 totalValuesData={totalValuesData}
+                cardValues={cardValues}
                 fetchingAgain={fetchingAgain}
                 setRefresh={setRefresh}
               />} />
-              <Route path='/add' element={<AddData setRefresh={setRefresh} />} />
+              <Route path='/add' element={<AddData setRefresh={setRefresh} totalValuesData={totalValuesData} />} />
               <Route path="*" element={<h1>404 Not Found</h1>} />
             </Routes>
           </>

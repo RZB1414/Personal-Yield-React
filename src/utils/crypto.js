@@ -12,7 +12,7 @@ function hexToBuffer(hex) {
     for (let i = 0; i < bytes.length; i++) {
         bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
     }
-    return bytes.buffer;
+    return bytes;
 }
 
 export { bufferToHex, hexToBuffer };

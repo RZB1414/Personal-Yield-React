@@ -1,33 +1,75 @@
 import './AddData.css';
-import { useState } from 'react';
-import { createTransaction, readFile } from '../../services/dividends';
+import { useState, useEffect } from 'react';
+import { createCardTransaction, getAllCreditCards } from '../../services/creditCards';
+import { readFile } from '../../services/dividends';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 
 const AddData = ({ setRefresh }) => {
-    const [liquidacao, setLiquidacao] = useState('');
-    const [valor, setValor] = useState('');
+    const [bank, setBank] = useState('');
+    const [bankOptions, setBankOptions] = useState([]);
+    const [currencyOptions, setCurrencyOptions] = useState([]);
+    const [isAddingNewBank, setIsAddingNewBank] = useState(false);
+    const [newBankCurrency, setNewBankCurrency] = useState('');
+    const [date, setDate] = useState('');
+    const [currency, setCurrency] = useState('');
+    const [value, setValue] = useState('');
     const [isAddingCard, setIsAddingCard] = useState(false);
     const [isAddingDividends, setIsAddingDividends] = useState(false);
     const [fileName, setFileName] = useState('Select a file')
     const [selectedFile, setSelectedFile] = useState(null)
 
+    // Adapte para receber userId como prop se necessário
+    const userId = sessionStorage.getItem('userId');
+
+    // Carrega bancos já salvos ao abrir o modal de cartão
+    useEffect(() => {
+        if (isAddingCard) {
+            const fetchBanks = async () => {
+                try {
+                    const data = await getAllCreditCards(userId);
+                    console.log('Fetched banks:', data);
+                    
+                    const uniqueBanks = [...new Set(data.map(b => b.bank))];                    
+                    setBankOptions(uniqueBanks);
+                    const uniqueCurrencies = [...new Set(data.map(b => b.currency))];
+                    setCurrencyOptions(uniqueCurrencies);
+                } catch (error) {
+                    console.log('Error fetching banks:', error);
+                    setBankOptions([]);
+                }
+            };
+            fetchBanks();
+        }
+    }, [isAddingCard, userId]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        let bankName = bank;
+
         const transaction = {
-            liquidacao,
-            lancamento: "Pagamento para BANCO XP S/A", // Lançamento fixo
-            valor: parseFloat(valor), // Converte o valor para número
-            ticker: "CARTAO DE CREDITO" // Ticker fixo
+            bank: bankName,
+            date,
+            currency,
+            value: parseFloat(value),
+            userId
         };
 
         try {
-            const response = await createTransaction(transaction);
+            const response = await createCardTransaction(transaction);
             console.log('Transaction created:', response);
-            alert('Transaction successfully created!');
+            alert('Card transaction created!');
+            setIsAddingCard(false);
+            setBank('');
+            setDate('');
+            setCurrency('');
+            setValue('');
+            setIsAddingNewBank(false);
+            setNewBankCurrency('');
+            setRefresh && setRefresh(prev => prev + 1);
         } catch (error) {
             console.error('Error creating transaction:', error);
-            alert('Failed to create transaction.');
+            alert(error?.response?.data?.msg || 'Failed to create transaction.');
         }
     }
 
@@ -72,22 +114,113 @@ const AddData = ({ setRefresh }) => {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <CloseIcon className='close-card-icon' onClick={() => setIsAddingCard(false)} />
-                        <label htmlFor="liquidacao">Liquidacao:</label>
+                        <label htmlFor="bank">Bank:</label>
+                        {isAddingNewBank ? (
+                            <>
+                                <input
+                                    type="text"
+                                    className="bank-input"
+                                    placeholder="Enter new bank name"
+                                    value={bank}
+                                    onChange={e => setBank(e.target.value)}
+                                    autoFocus
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    className="bank-input"
+                                    placeholder="Currency (ex: BRL, USD)"
+                                    value={newBankCurrency}
+                                    onChange={e => setNewBankCurrency(e.target.value)}
+                                    required
+                                />
+                                <button type="button" onClick={() => {
+                                    setBank('');
+                                    setIsAddingNewBank(false);
+                                    setNewBankCurrency('');
+                                }}>Cancel</button>
+                            </>
+                        ) : (
+                            <select
+                                id="bank"
+                                className="bank-select"
+                                value={bank}
+                                onChange={e => {
+                                    if (e.target.value === '__new__') {
+                                        setIsAddingNewBank(true);
+                                        setBank('');
+                                    } else {
+                                        setBank(e.target.value);
+                                        setIsAddingNewBank(false);
+                                    }
+                                }}
+                                required
+                            >
+                                <option value="">Select bank</option>
+                                {bankOptions.map((b, idx) => (
+                                    <option key={idx} value={b}>{b}</option>
+                                ))}
+                                <option value="__new__">Add New Bank</option>
+                            </select>
+                        )}
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="date">Date:</label>
                         <input
                             type="date"
-                            id="liquidacao"                            
-                            value={liquidacao}
-                            onChange={(e) => setLiquidacao(e.target.value)}
+                            id="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
                             required
                         />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="valor">Valor:</label>
+                        <label htmlFor="currency">Currency:</label>
+                        {currency === '__new__' ? (
+                            <div style={{display: 'flex', gap: 8}}>
+                                <input
+                                    type="text"
+                                    className="currency-input"
+                                    placeholder="Enter new currency (ex: BRL, USD)"
+                                    value={newBankCurrency}
+                                    onChange={e => setNewBankCurrency(e.target.value)}
+                                    required
+                                />
+                                <button type="button" onClick={() => {
+                                    setCurrency('');
+                                    setNewBankCurrency('');
+                                }}>Cancel</button>
+                            </div>
+                        ) : (
+                            <select
+                                id="currency"
+                                className="currency-select"
+                                value={currency}
+                                onChange={e => {
+                                    if (e.target.value === '__new__') {
+                                        setCurrency('__new__');
+                                        setNewBankCurrency('');
+                                    } else {
+                                        setCurrency(e.target.value);
+                                    }
+                                }}
+                                required
+                            >
+                                <option value="">Select currency</option>
+                                {currencyOptions.map((c, idx) => (
+                                    <option key={idx} value={c}>{c}</option>
+                                ))}
+                                <option value="__new__">Add New Currency</option>
+                            </select>
+                        )}
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="value">Value:</label>
                         <input
                             type="number"
-                            id="valor"
-                            value={valor}
-                            onChange={(e) => setValor(e.target.value)}
+                            id="value"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
                             step="0.01"
                             required
                         />

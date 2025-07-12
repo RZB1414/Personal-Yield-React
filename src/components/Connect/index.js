@@ -1,7 +1,7 @@
 import { getAllDividends } from "../../services/dividends"
 import { getStocksList, stockData } from "../../services/stocks"
 import './Connect.css';
-import { getCurrenteUser, loginUser } from '../../services/login'
+import { getCurrentUser, loginUser } from '../../services/login'
 import { useState } from 'react';
 
 let filteredDividends = [];
@@ -9,21 +9,27 @@ let dividends = [];
 let stocks = [];
 let updated = [];
 let decryptedDividends = [];
-let passwordKey = "";
 
 const fetchDividendsStocks = async () => {
+    const userId = sessionStorage.getItem('userId')
+    stocks = [];
+    updated = [];
+    dividends = [];
+    filteredDividends = [];
+    decryptedDividends = [];
     try {
-        stocks = await getStocksList();
+        stocks = await getStocksList(userId);
         updated = await Promise.all(
-            stocks.map(async (stock) => {
-                const stockDataResult = await stockData(stock.symbol);
+            stocks.map(async (stock) => {             
+                const stockDataResult = await stockData(stock.symbol)             
+                
                 return {
                     ...stock,
                     currentPrice: stockDataResult["stock info: "]?.currentPrice ?? 0
                 };
             })
         )
-        const userId = sessionStorage.getItem('userId')
+        const passwordKey = sessionStorage.getItem('Password');
         const allDividends = await getAllDividends(userId, passwordKey)
         if (allDividends && allDividends.unfilteredDividends) {
 
@@ -82,12 +88,13 @@ const LoginForm = ({ onLogin }) => {
                 password: hashedPassword
             };
             const response = await loginUser(loginData);
-            const userData = await getCurrenteUser();
+            const userData = await getCurrentUser();
+            sessionStorage.setItem('Password', form.password); // Armazena a senha pura para uso posterior
             sessionStorage.setItem('userId', userData.id);
+            console.log(sessionStorage);
+            
 
             setMessage("Login realizado com sucesso!");
-
-            passwordKey = (form.password)
 
             if (onLogin) onLogin(response);
 

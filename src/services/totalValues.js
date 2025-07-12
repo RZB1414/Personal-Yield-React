@@ -1,6 +1,9 @@
 import axios from "axios"
 
-//const totalValuesApi = axios.create({ baseURL: 'http://localhost:3000/' })
+// const totalValuesApi = axios.create({ baseURL: 'http://localhost:3000/',
+//     withCredentials: true
+//  })
+
 const totalValuesApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
     headers: {
         'Content-Type': 'application/json'
@@ -8,9 +11,9 @@ const totalValuesApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
     withCredentials: true
 })
 
-async function getAllTotalValues() {
+async function getAllTotalValues(id) {
     try {
-        const response = await totalValuesApi.get('/auth/getAllTotalValueBrokers')
+        const response = await totalValuesApi.get(`/auth/getAllTotalValueBrokers/${id}`)
         return response.data
     } catch (error) {
         console.error('Error fetching total values:', error)

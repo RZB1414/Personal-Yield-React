@@ -1,8 +1,9 @@
 import './Menu.css'
 import { useNavigate } from "react-router-dom"
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
+import { ReactComponent as LogoutIcon } from '../../assets/icons/logout.svg'
 
-const Menu = () => {
+const Menu = ({setIsLoggedIn}) => {
 
     const navigate = useNavigate()
 
@@ -20,6 +21,14 @@ const Menu = () => {
             <h2 onClick={() => navigate('/add')}>
                 <AddIcon className='add-icon' />
             </h2>
+            <LogoutIcon className='logout' onClick={() => {
+                sessionStorage.setItem('userId', '')
+                sessionStorage.setItem('Password', '')
+                setIsLoggedIn(false)
+                navigate('/')
+             }}>
+                Logout
+            </LogoutIcon>
         </div>
     )
 }

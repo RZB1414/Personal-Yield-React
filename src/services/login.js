@@ -7,12 +7,41 @@ import axios from "axios"
 //     },
 //     withCredentials: true
 // })
+
 const loginApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
     headers: {
         'Content-Type': 'application/json'
     },
     withCredentials: true
 })
+
+// Interceptor para renovar o accessToken automaticamente
+loginApi.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+        // Se for 401 e não for a própria rota de refresh, tenta renovar
+        if (error.response && error.response.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/refreshToken')) {
+            originalRequest._retry = true;
+            try {
+                await refreshAccessToken();
+                return loginApi(originalRequest);
+            } catch (refreshError) {
+                // Se falhar ao renovar, faz logout (pode limpar sessionStorage/localStorage se desejar)
+                window.sessionStorage.clear();
+                return Promise.reject(refreshError);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+// const loginApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+//     headers: {
+//         'Content-Type': 'application/json'
+//     },
+//     withCredentials: true
+// })
 
 async function createUser(form) {
     try {
@@ -47,11 +76,10 @@ async function refreshAccessToken() {
     }
 }
 
-async function getCurrenteUser() {
+
+async function getCurrentUser() {
     try {
-        const response = await loginApi.get('/auth/me')
-        console.log('Current user data:', response.data);
-        
+        const response = await loginApi.get('/auth/me')        
         return response.data
     } catch (error) {
         console.error('Erro ao obter usuário atual:', error)
@@ -63,5 +91,5 @@ export {
     createUser,
     loginUser,
     refreshAccessToken,
-    getCurrenteUser
+    getCurrentUser
 }
