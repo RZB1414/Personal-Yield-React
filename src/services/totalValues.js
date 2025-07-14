@@ -4,7 +4,7 @@ import axios from "axios"
 //     withCredentials: true
 //  })
 
-const totalValuesApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+const totalValuesApi = axios.create({baseURL: 'https://api-yield-production.up.railway.app/',
     headers: {
         'Content-Type': 'application/json'
     },

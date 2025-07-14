@@ -5,7 +5,7 @@ import axios from "axios"
 //     withCredentials: true
 // })
 
-const creditCardsApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
+const creditCardsApi = axios.create({baseURL: 'https://api-yield-production.up.railway.app/',
     headers: {
         'Content-Type': 'application/json'
     },
