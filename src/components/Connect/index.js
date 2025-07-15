@@ -19,16 +19,19 @@ const fetchDividendsStocks = async () => {
     decryptedDividends = [];
     try {
         stocks = await getStocksList(userId);
+        
         updated = await Promise.all(
             stocks.map(async (stock) => {             
                 const stockDataResult = await stockData(stock.symbol)             
                 
                 return {
                     ...stock,
-                    currentPrice: stockDataResult["stock info: "]?.currentPrice ?? 0
+                    currentPrice: stockDataResult["stock info: "]?.currentPrice ?? 0,
+                    dayPriceChangePercent: stockDataResult["stock info: "]?.dayPriceChangePercent ?? 0
                 };
             })
         )
+        
         const passwordKey = sessionStorage.getItem('Password');
         const allDividends = await getAllDividends(userId, passwordKey)
         if (allDividends && allDividends.unfilteredDividends) {

@@ -181,7 +181,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
     const totalCurrentValueBRL = updatedStocksList
         .filter(stock => stock.currency === 'BRL')
         .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0
-    );
+        );
 
     const percentualValorizacaoBRL = totalInvestedBRL > 0
         ? ((totalCurrentValueBRL - totalInvestedBRL) / totalInvestedBRL) * 100
@@ -212,8 +212,32 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         ? (((totalCurrentValueBRL + totalDividends - totalInvestedBRL) / totalInvestedBRL) * 100)
         : 0;
 
-        let valorizacaoTotalBRL = 0
-        let valorizacaoTotalUSD = 0
+    // Calcula valorização percentual total da carteira BRL no dia
+    const brlStocks = updatedStocksList.filter(stock => stock.currency === 'BRL');
+    const totalCurrentValue = brlStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
+    const totalYesterdayValue = brlStocks.reduce((acc, stock) => {
+        const yesterdayPrice = stock.currentPrice / (1 + (Number(stock.dayPriceChangePercent) || 0));
+        return acc + (yesterdayPrice * stock.stocksQuantity);
+    }, 0);
+
+    const carteiraValorizacaoDia = totalYesterdayValue > 0
+        ? ((totalCurrentValue - totalYesterdayValue) / totalYesterdayValue) * 100
+        : 0;
+
+    // Calcula valorização percentual total da carteira USD no dia
+    const usdStocks = updatedStocksList.filter(stock => stock.currency === 'USD');
+    const totalCurrentValueUSD_Day = usdStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
+    const totalYesterdayValueUSD = usdStocks.reduce((acc, stock) => {
+        const yesterdayPrice = stock.currentPrice / (1 + (Number(stock.dayPriceChangePercent) || 0));
+        return acc + (yesterdayPrice * stock.stocksQuantity);
+    }, 0);
+
+    const carteiraValorizacaoDiaUSD = totalYesterdayValueUSD > 0
+        ? ((totalCurrentValueUSD_Day - totalYesterdayValueUSD) / totalYesterdayValueUSD) * 100
+        : 0;
+
+    let valorizacaoTotalBRL = 0
+    let valorizacaoTotalUSD = 0
 
     return (
         <>
@@ -320,6 +344,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             <th className="sticky-column">Symbol</th>
                                             <th>Current Price</th>
                                             <th>Avg Price</th>
+                                            <th>Daily Return</th>
                                             <th>Stock Return</th>
                                             <th>Return & Div</th>
                                             <th>Total Value</th>
@@ -346,7 +371,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 return totalPercB - totalPercA; // ordem decrescente
                                             })
                                             .map((stock, index) => {
-
                                                 // Calcula valorização individual
                                                 const invested = stock.averagePrice * stock.stocksQuantity;
                                                 const current = stock.currentPrice * stock.stocksQuantity;
@@ -373,6 +397,10 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                         </td>
 
                                                         <td>{stock.averagePrice.toFixed(2)}</td>
+
+                                                        <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
+                                                            {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) * 100).toFixed(2)}%` : null}
+                                                        </td>
 
                                                         <td style={{ color: isPositive ? 'green' : 'red' }}>
                                                             {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
@@ -413,6 +441,12 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                         .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
                                                 </strong>
                                             </td>
+                                            <td style={{ color: carteiraValorizacaoDia >= 0 ? 'green' : 'red' }}>
+                                                <strong>
+                                                    {(Number(carteiraValorizacaoDia)).toFixed(2)}%
+                                                </strong>
+                                            </td>
+
                                             <td>
                                                 <strong>
                                                     {percentualValorizacaoBRL.toFixed(2)}%
@@ -466,6 +500,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 <th className="sticky-column">Symbol</th>
                                                 <th>Current Price</th>
                                                 <th>Avg Price</th>
+                                                <th>Daily Return</th>
                                                 <th>Stock Return</th>
                                                 <th>Return & Div</th>
                                                 <th>Total Value</th>
@@ -519,6 +554,11 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             </td>
                                                             <td>{stock.averagePrice.toFixed(2)}</td>
 
+                                                            <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
+                                                                {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) *
+                                                                    100).toFixed(2)}%` : null}
+                                                            </td>
+
                                                             <td style={{ color: isPositive ? 'green' : 'red' }}>
                                                                 {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
                                                                     ? `${Number(percentageDifference).toFixed(2)}%`
@@ -558,6 +598,13 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
                                                     </strong>
                                                 </td>
+
+                                                <td style={{ color: carteiraValorizacaoDiaUSD >= 0 ? 'green' : 'red' }}>
+                                                    <strong>
+                                                        {(Number(carteiraValorizacaoDiaUSD)).toFixed(2)}%
+                                                    </strong>
+                                                </td>
+
                                                 <td>
                                                     <strong>
                                                         {percentualValorizacaoUSD.toFixed(2)}%

@@ -1,14 +1,8 @@
 import axios from "axios"
+import { BASE_URL } from "./apiConfig"
 
-// const loginApi = axios.create({ 
-//     baseURL: 'http://localhost:3000/',
-//     headers: {
-//         'Content-Type': 'application/json'
-//     },
-//     withCredentials: true
-// })
-
-const loginApi = axios.create({baseURL: 'https://api-yield-production.up.railway.app/',
+const loginApi = axios.create({
+    baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json'
     },
@@ -35,13 +29,6 @@ loginApi.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
-// const loginApi = axios.create({baseURL: 'https://api-yield.vercel.app/',
-//     headers: {
-//         'Content-Type': 'application/json'
-//     },
-//     withCredentials: true
-// })
 
 async function createUser(form) {
     try {

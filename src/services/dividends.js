@@ -1,13 +1,10 @@
 import axios from 'axios'
+import { BASE_URL } from "./apiConfig"
 import * as XLSX from 'xlsx'
 import { bufferToHex, hexToBuffer } from '../utils/crypto'
 
-// const dividendsApi = axios.create({ baseURL: 'http://localhost:3000',
-//   withCredentials: true
-//  })
-
 const dividendsApi = axios.create({
-    baseURL: 'https://api-yield-production.up.railway.app/',
+    baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json'
     },

@@ -1,11 +1,8 @@
 import axios from "axios"
+import { BASE_URL } from "./apiConfig"
 
-// const creditCardsApi = axios.create({
-//     baseURL: 'http://localhost:3000/',
-//     withCredentials: true
-// })
-
-const creditCardsApi = axios.create({baseURL: 'https://api-yield-production.up.railway.app/',
+const creditCardsApi = axios.create({
+    baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json'
     },
