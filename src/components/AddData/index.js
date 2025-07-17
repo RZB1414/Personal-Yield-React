@@ -17,9 +17,10 @@ const AddData = ({ setRefresh }) => {
     const [isAddingDividends, setIsAddingDividends] = useState(false);
     const [fileName, setFileName] = useState('Select a file')
     const [selectedFile, setSelectedFile] = useState(null)
+    const [isUploadingFile, setIsUploadingFile] = useState(false);
 
     // Adapte para receber userId como prop se necessário
-    const userId = sessionStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId')
 
     // Carrega bancos já salvos ao abrir o modal de cartão
     useEffect(() => {
@@ -28,8 +29,8 @@ const AddData = ({ setRefresh }) => {
                 try {
                     const data = await getAllCreditCards(userId);
                     console.log('Fetched banks:', data);
-                    
-                    const uniqueBanks = [...new Set(data.map(b => b.bank))];                    
+
+                    const uniqueBanks = [...new Set(data.map(b => b.bank))];
                     setBankOptions(uniqueBanks);
                     const uniqueCurrencies = [...new Set(data.map(b => b.currency))];
                     setCurrencyOptions(uniqueCurrencies);
@@ -92,13 +93,15 @@ const AddData = ({ setRefresh }) => {
         }
 
         try {
+            setIsUploadingFile(true)
             await readFile(selectedFile)
             setRefresh(prevRefresh => prevRefresh + 1)
             setIsAddingDividends(false)
             setFileName('Select a file')
             setSelectedFile(null)
             alert('File uploaded and processed successfully!');
-            
+            setIsUploadingFile(false)
+
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Failed to upload and process the file.');
@@ -177,7 +180,7 @@ const AddData = ({ setRefresh }) => {
                     <div className="form-group">
                         <label htmlFor="currency">Currency:</label>
                         {currency === '__new__' ? (
-                            <div style={{display: 'flex', gap: 8}}>
+                            <div style={{ display: 'flex', gap: 8 }}>
                                 <input
                                     type="text"
                                     className="currency-input"
@@ -239,14 +242,15 @@ const AddData = ({ setRefresh }) => {
             }
 
 
-            {isAddingDividends ?
+            {isAddingDividends ? (!isUploadingFile ?
                 <div className="file-upload-container">
                     <div className="file-upload-closebutton">
-                    <CloseIcon className='close-card-icon' onClick={() => {
-                        setIsAddingDividends(false) 
-                        setSelectedFile(null)
-                        setFileName('Select a file')} 
-                    }/>  
+                        <CloseIcon className='close-card-icon' onClick={() => {
+                            setIsAddingDividends(false)
+                            setSelectedFile(null)
+                            setFileName('Select a file')
+                        }
+                        } />
                     </div>
                     <label htmlFor="file-upload" className="file-upload-label">
                         {fileName}
@@ -264,9 +268,13 @@ const AddData = ({ setRefresh }) => {
                         disabled={!selectedFile} // Desabilita o botão se nenhum arquivo for selecionado
                     >
                         Upload File
-                    </button>                    
+                    </button>
                 </div>
-                : null
+                : (<div className="loader-container">
+                    <div className="loader-message">Encrypting your data...</div>
+                    <div className="loader"></div>
+                </div>)
+            ) : null
             }
 
         </div>
