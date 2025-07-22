@@ -9,6 +9,7 @@ let dividends = [];
 let stocks = [];
 let updated = [];
 let decryptedDividends = [];
+let password = '';
 
 const fetchDividendsStocks = async () => {
     const userId = sessionStorage.getItem('userId')
@@ -32,7 +33,7 @@ const fetchDividendsStocks = async () => {
             })
         )
         
-        const passwordKey = sessionStorage.getItem('Password');
+        const passwordKey = password
         const allDividends = await getAllDividends(userId, passwordKey)
         if (allDividends && allDividends.unfilteredDividends) {
 
@@ -92,7 +93,7 @@ const LoginForm = ({ onLogin }) => {
             };
             const response = await loginUser(loginData);
             const userData = await getCurrentUser();
-            sessionStorage.setItem('Password', form.password); // Armazena a senha pura para uso posterior
+            password = form.password; // Armazenar a senha em uma variável global
             sessionStorage.setItem('userId', userData.id);
             console.log(sessionStorage);
             

@@ -19,9 +19,9 @@ const Dividends = ({ fetchingAgain }) => {
     const [noDividends, setNoDividends] = useState(false)
 
     useEffect(() => {
+        setNoDividends(false);
         if (dividends?.dividends?.length > 0) {
             setDividendsList(dividends.dividends)
-            
             // Calcula as datas de início e fim gerais
             const startDate = dividends.dividends.reduce(
                 (earliest, dividend) =>
@@ -43,6 +43,7 @@ const Dividends = ({ fetchingAgain }) => {
             setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
             setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
         } else {
+            setDividendsList([]);
             setNoDividends(true)
         }
     }, [fetchingAgain])

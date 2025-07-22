@@ -114,6 +114,17 @@
     margin-left: auto;
 }
 
+.file-upload-password-input {
+    width: 60%;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
 .loader-container {
     display: flex;
     flex-direction: column;

@@ -23,6 +23,8 @@ loginApi.interceptors.response.use(
             } catch (refreshError) {
                 // Se falhar ao renovar, faz logout (pode limpar sessionStorage/localStorage se desejar)
                 window.sessionStorage.clear();
+                // Redireciona para a tela de login
+                window.location.href = '/';
                 return Promise.reject(refreshError);
             }
         }

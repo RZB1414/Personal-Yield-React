@@ -64,12 +64,15 @@ async function encryptDividends(parsedData, password) {
     const records = [];
 
     for (const item of parsedData) {
+        // Normalização determinística
         const mov = item.movimentacao instanceof Date ? item.movimentacao.toISOString() : '';
         const liq = item.liquidacao instanceof Date ? item.liquidacao.toISOString() : '';
-        const ticker = item.ticker || '';
-        const valor = typeof item.valor === 'number' ? item.valor : 0;
+        const ticker = (item.ticker || '').trim().toUpperCase();
+        // Valor sempre com 2 casas decimais, como string
+        const valorNum = typeof item.valor === 'number' ? item.valor : 0;
+        const valor = Number(valorNum).toFixed(2);
 
-        const safeItem = { ...item, movimentacao: mov, liquidacao: liq, ticker, valor };
+        const safeItem = { ...item, movimentacao: mov, liquidacao: liq, ticker, valor: Number(valor) };
 
         const salt = window.crypto.getRandomValues(new Uint8Array(16));
         const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -82,6 +85,7 @@ async function encryptDividends(parsedData, password) {
             data
         );
 
+        // Hash determinístico
         const hashSource = `${mov}|${liq}|${ticker}|${valor}`;
         const hashBuffer = await window.crypto.subtle.digest('SHA-256', enc.encode(hashSource));
         const hashHex = bufferToHex(hashBuffer);
@@ -212,17 +216,21 @@ async function createTransaction(transaction) {
     }
 }
 
-async function readFile(file) {
+// Adicione um parâmetro "tipo" ("pc" ou "mobile")
+// Exemplo de uso: readFile(file, tipo)
+async function readFile(file, tipo, password) {
     try {
         // Lê o arquivo XLSX da memória
         const dataReceived = await file.arrayBuffer();
-        const workbook = XLSX.read(dataReceived, { type: "array" }); 
+        const workbook = XLSX.read(dataReceived, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
         // Converte os dados da planilha para JSON
         let data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        let dataMapped
+        let dataMapped;
+
+        console.log('Dados lidos do arquivo:', data);
 
         // Função para converter datas do Excel para objeto Date
         function convertExcelDateToDate(excelDate) {
@@ -262,16 +270,36 @@ async function readFile(file) {
             }
             return null;
         }
-        
 
-        // Renomeia as colunas para os nomes corretos e converte datas para Date
-        dataMapped = data.map(row => ({
-            movimentacao: convertExcelDateToDate(row["Movimentação"] || row["__EMPTY"]),
-            liquidacao: convertExcelDateToDate(row["Liquidação"] || row["__EMPTY_1"]),
-            lancamento: row["Lançamento"] || row["__EMPTY_2"],
-            valor: parseFloat(row["Valor (R$)"] || row["__EMPTY_4"]) || 0,
-            ticker: extractTicker(row["Lançamento"] || row["__EMPTY_2"])
-        }))
+        // Caixa de seleção: tipo = "pc" ou "mobile"
+        // Para PC, índice começa em 0; para mobile, começa em 1
+        if (tipo === "pc") {
+            dataMapped = data.map(row => {
+                const base = 0;
+                const movimentacao = convertExcelDateToDate(row["Movimentação"] !== undefined ? row["Movimentação"] : row[`__EMPTY`]);
+                const liquidacao = convertExcelDateToDate(row["Liquidação"] !== undefined ? row["Liquidação"] : row[`__EMPTY_${base+1}`]);
+                const lancamento = row["Lançamento"] !== undefined && row["Lançamento"] !== null ? String(row["Lançamento"]) : (row[`__EMPTY_${base+2}`] !== undefined ? String(row[`__EMPTY_${base+2}`]) : "");
+                const valor = parseFloat(row["Valor (R$)"] !== undefined ? row["Valor (R$)"] : row[`__EMPTY_${base+4}`]) || 0;
+                const ticker = extractTicker(lancamento);
+                return { movimentacao, liquidacao, lancamento, valor, ticker };
+            });
+        } else {
+            dataMapped = data.map(row => {
+                const base = 1;
+                function getByIndex(row, idx) {
+                    const key = `__EMPTY_${idx}`;
+                    return row[key] !== undefined ? row[key] : undefined;
+                }
+                const movimentacao = convertExcelDateToDate(getByIndex(row, base));
+                const liquidacao = convertExcelDateToDate(getByIndex(row, base+1));
+                const lancamento = getByIndex(row, base+2) !== undefined && getByIndex(row, base+2) !== null ? String(getByIndex(row, base+2)) : "";
+                const valor = parseFloat(getByIndex(row, base+4)) || 0;
+                const ticker = extractTicker(lancamento);
+                return { movimentacao, liquidacao, lancamento, valor, ticker };
+            });
+        }
+
+        console.log('Dados mapeados:', dataMapped);
 
         // Mapeamento de lançamentos permitidos para seus respectivos tickers
         const lancamentoToTicker = {
@@ -288,7 +316,7 @@ async function readFile(file) {
             "Transferência recebida da conta digital": "TRANSF RECEBIDA CONTA DIGITAL"
         };
 
-        const allowedLancamentos = Object.keys(lancamentoToTicker)        
+        const allowedLancamentos = Object.keys(lancamentoToTicker);
 
         // Filtra os dados para eliminar linhas que não contêm todos os campos necessários
         const dataFiltered = dataMapped.filter(row => {
@@ -312,7 +340,7 @@ async function readFile(file) {
                 row.valor !== "Valor (R$)" &&
                 row.ticker !== "Ticker"
             );
-        })       
+        });
 
         // Todos os dados já são objetos Date
         const parsedData = dataFiltered.map(item => ({
@@ -321,26 +349,24 @@ async function readFile(file) {
             liquidacao: item.liquidacao instanceof Date ? item.liquidacao : null
         }));
 
-        const password = sessionStorage.getItem('Password');
-        console.log('Password:', password);
-
         const encryptedData = await encryptDividends(parsedData, password);
-        
-        await saveData({ records: encryptedData });
 
-        async function saveData({records}) {
+        const result = await saveData({ records: encryptedData });
+
+        async function saveData({ records }) {
             try {
-                const response = await dividendsApi.post('/auth/save', {records})
-        
+                const response = await dividendsApi.post('/auth/save', { records });
                 if (response && response.data) {
                     console.log('resposta saveData:', response.data);
                 }
                 return response.data;
             } catch (error) {
-                console.log('Error saving data:', error)
-                return error.message
+                console.log('Error saving data:', error);
+                return ('Error saving data: ',error)
             }
         }
+
+        return result;
 
     } catch (error) {
         console.error("Erro ao salvar os dados:", error);

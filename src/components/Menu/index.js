@@ -23,7 +23,6 @@ const Menu = ({setIsLoggedIn}) => {
             </h2>
             <LogoutIcon className='logout' onClick={() => {
                 sessionStorage.setItem('userId', '')
-                sessionStorage.setItem('Password', '')
                 setIsLoggedIn(false)
                 navigate('/')
              }}>
