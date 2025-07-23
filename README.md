@@ -1,70 +1,77 @@
-# Getting Started with Create React App
+# 📈 React Yield
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A frontend project built with **React** to interact with the [API Yield](https://github.com/RZB1414/api-Yield),  
+allowing users to view and manage their investment returns in a visual and intuitive way.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 💡 Why I built this project
 
-### `npm start`
+As a professional volleyball athlete who relocates to a different country each year to play for new teams,  
+I constantly deal with financial accounts across multiple banks, brokers, and currencies.  
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+After struggling to find an app that could manage my international finances the way I needed,  
+I decided to build my own tailored solution — starting with the backend, and now with this React frontend.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+![Status](https://img.shields.io/badge/status-in%20development-yellow)  
+![Tech](https://img.shields.io/badge/built%20with-React-blue)  
+![License](https://img.shields.io/badge/license-MIT-green)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🚀 Technologies used
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- [React](https://reactjs.org/)  
+- [Axios](https://axios-http.com/)  
+- [React Router](https://reactrouter.com/)  
+- [CSS Modules]
+- [Create React App]
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📂 Project structure
 
-### `npm run eject`
+```bash
+src/
+├── components/     # Reusable UI components
+├── services/       # API interaction logic (Axios)
+├── assets/         # Images, icons, etc.
+├── App.jsx         # Main app component
+├── main.jsx        # Entry point
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+🧪 Features
+Dashboard showing asset performance and dividends
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Asset list with details pulled from the backend API
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Responsive and modern UI
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Integration with the API Yield
 
-## Learn More
+⚙️ Running the project locally
+Requirements
+Node.js and npm installed
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Backend API running locally (or deployed)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Steps
+bash
+Copiar
+Editar
+# Clone the repository
+git clone https://github.com/RZB1414/react-yield.git
 
-### Code Splitting
+cd react-yield
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Install dependencies
+npm install
 
-### Analyzing the Bundle Size
+# Start the development server
+npm run dev
+📝 Make sure the backend API is running and accessible.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+📫 renanbuiatti14@gmail.com  
+🌐 [LinkedIn](https://www.linkedin.com/in/renan-buiatti-13787924a)  
+📷 [Instagram] (https://www.instagram.com/renanbuiatti/)
