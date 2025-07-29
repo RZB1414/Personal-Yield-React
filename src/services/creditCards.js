@@ -12,6 +12,7 @@ const creditCardsApi = axios.create({
 async function getAllCreditCards(id) {
     try {
         const response = await creditCardsApi.get(`/auth/getAllCreditCards/${id}`)
+        
         return response.data
     } catch (error) {
         console.error('Error fetching credit cards:', error)
@@ -22,6 +23,7 @@ async function getAllCreditCards(id) {
 async function createCardTransaction(transaction) {
     try {
         const response = await creditCardsApi.post('/auth/createCardTransaction', transaction)
+        
         return response.data
     } catch (error) {
         console.error('Error creating card transaction:', error)

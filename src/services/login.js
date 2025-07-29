@@ -35,7 +35,6 @@ loginApi.interceptors.response.use(
 async function createUser(form) {
     try {
         const response = await loginApi.post('/auth/createUser', form)
-        console.log('User created successfully:', response.data)
 
         return response.data
     } catch (error) {
@@ -47,7 +46,6 @@ async function createUser(form) {
 async function loginUser(form) {
     try {
         const response = await loginApi.post('/auth/login', form)
-        console.log('Login successful:', response.data)
         return response.data
     } catch (error) {
         console.error('Error logging in:', error)

@@ -29,6 +29,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
         setTotalValues(totalValuesData);
+        
     }, [brokersData, totalValuesData, fetchingAgain])
 
     const months = [
@@ -106,8 +107,6 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                 setAmountUSD('');
                 setDollarRate(null);
             } catch (error) {
-                console.log('Error adding total value:', error);
-
                 alert('Error adding total value:', error.msg);
             }
         } else {

@@ -173,8 +173,6 @@ async function getAllDividends(userId, password) {
             return error.message
         }    
     }
-
-    console.log('encryptedDividends:', encryptedDividends);
     
     if (!encryptedDividends|| encryptedDividends.data.message === 'No records found for this user') {
       return { unfilteredDividends: [], dividends: [] }
@@ -229,8 +227,6 @@ async function readFile(file, tipo, password) {
         // Converte os dados da planilha para JSON
         let data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
         let dataMapped;
-
-        console.log('Dados lidos do arquivo:', data);
 
         // Função para converter datas do Excel para objeto Date
         function convertExcelDateToDate(excelDate) {
@@ -299,8 +295,6 @@ async function readFile(file, tipo, password) {
             });
         }
 
-        console.log('Dados mapeados:', dataMapped);
-
         // Mapeamento de lançamentos permitidos para seus respectivos tickers
         const lancamentoToTicker = {
             "RETIRADA EM C/C": "TED RETIRADA",
@@ -357,11 +351,9 @@ async function readFile(file, tipo, password) {
             try {
                 const response = await dividendsApi.post('/auth/save', { records });
                 if (response && response.data) {
-                    console.log('resposta saveData:', response.data);
                 }
                 return response.data;
             } catch (error) {
-                console.log('Error saving data:', error);
                 return ('Error saving data: ',error)
             }
         }

@@ -21,8 +21,6 @@ async function getBrokers(id) {
 
 async function addBroker(broker) {
     try {
-        console.log('Adding broker:', broker);
-        
         const response = await brokersApi.post('/auth/createBroker', broker)
         return response.data
     } catch (error) {

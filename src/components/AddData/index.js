@@ -45,14 +45,12 @@ const AddData = ({ setRefresh }) => {
             const fetchBanks = async () => {
                 try {
                     const data = await getAllCreditCards(userId);
-                    console.log('Fetched banks:', data);
 
                     const uniqueBanks = [...new Set(data.map(b => b.bank))];
                     setBankOptions(uniqueBanks);
                     const uniqueCurrencies = [...new Set(data.map(b => b.currency))];
                     setCurrencyOptions(uniqueCurrencies);
                 } catch (error) {
-                    console.log('Error fetching banks:', error);
                     setBankOptions([]);
                 }
             };
@@ -63,19 +61,20 @@ const AddData = ({ setRefresh }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+
         let bankName = bank;
+        let currencyName = currency === '__new__' ? newBankCurrency : currency;
 
         const transaction = {
             bank: bankName,
             date,
-            currency,
+            currency: currencyName,
             value: parseFloat(value),
             userId
         };
 
         try {
-            const response = await createCardTransaction(transaction);
-            console.log('Transaction created:', response);
+            await createCardTransaction(transaction);
             alert('Card transaction created!');
             setIsAddingCard(false);
             setBank('');

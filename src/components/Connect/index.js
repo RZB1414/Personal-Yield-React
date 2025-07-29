@@ -94,9 +94,7 @@ const LoginForm = ({ onLogin }) => {
             const response = await loginUser(loginData);
             const userData = await getCurrentUser();
             password = form.password; // Armazenar a senha em uma variável global
-            sessionStorage.setItem('userId', userData.id);
-            console.log(sessionStorage);
-            
+            sessionStorage.setItem('userId', userData.id);            
 
             setMessage("Login realizado com sucesso!");
 

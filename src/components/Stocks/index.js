@@ -74,7 +74,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
     const handleAddStock = async () => {
         try {
             const userId = sessionStorage.getItem('userId')
-            console.log('useriddddd', userId);
 
             const stockToAdd = {
                 symbol: stockClicked.symbol,
@@ -90,8 +89,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                 setResults([])
                 return
             }
-            console.log('Adding stock controller:', stockToAdd);
-
 
             const response = await addStock(stockToAdd)
             setRefresh(prevRefresh => prevRefresh + 1)
@@ -102,8 +99,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
             setSearchStock(false)
 
         } catch (error) {
-            console.log('Error adding stock:', error);
-
             console.error('Error adding stock:', error);
         }
     }
@@ -308,6 +303,10 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                             }}></SearchIcon>
                         }
 
+                        {updatedStocksList.length > 0 ? null :
+                            <p className='no-stocks-message'>Search for a stock to add it to your portfolio.</p>
+                        }
+
                         <div className="results-container">
                             {showingStock ? null :
                                 <ul>
@@ -335,8 +334,13 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
 
                     </div>
 
+                    {stocksList.filter(stock => stock.currency === 'BRL').length > 0 ?
+                            <h2 className='stocks-list-title-BRL'>BRL Stocks</h2>
+                            : null
+                    }
+
                     <div className='stocks-list-container'>
-                        {updatedStocksList.length > 0 ? (
+                        {stocksList.filter(stock => stock.currency === 'BRL').length > 0 ? (
                             <div className="table-wrapper">
                                 <table className='stocks-table'>
                                     <thead>
@@ -396,7 +400,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             {stock.currentPrice.toFixed(2)}
                                                         </td>
 
-                                                        <td>{stock.averagePrice.toFixed(2)}</td>
+                                                        <td>{Number(stock.averagePrice).toFixed(2)}</td>
 
                                                         <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
                                                             {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) * 100).toFixed(2)}%` : null}
@@ -489,10 +493,14 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                     </div>
 
                     <div className="stocks-container-all">
-                        <h2 className='stocks-list-title'>US Stocks</h2>
+
+                        {stocksList.filter(stock => stock.currency === 'USD').length > 0 ?
+                            <h2 className='stocks-list-title-USD'>US Stocks</h2>
+                            : null
+                        }
 
                         <div className='stocks-list-container'>
-                            {updatedStocksList.length > 0 ? (
+                            {stocksList.filter(stock => stock.currency === 'USD').length > 0 ? (
                                 <div className="table-wrapper">
                                     <table className='stocks-table'>
                                         <thead>
@@ -552,7 +560,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                                 {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
                                                                 {stock.currentPrice.toFixed(2)}
                                                             </td>
-                                                            <td>{stock.averagePrice.toFixed(2)}</td>
+                                                            <td>{Number(stock.averagePrice).toFixed(2)}</td>
 
                                                             <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
                                                                 {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) *

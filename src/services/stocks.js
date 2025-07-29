@@ -39,12 +39,12 @@ async function stockData(stock) {
 
 
 async function addStock(stock) {
-    console.log('Adding stock:', stock);
     try {
         const response = await stocksApi.post('/auth/addStock', stock);
         if (response.data && response.data.aviso) {
             return { aviso: response.data.aviso };
         }
+        
         return response.data;
     } catch (error) {
         console.error('Error adding stock:', error);
@@ -56,6 +56,7 @@ async function addStock(stock) {
 async function getStocksList(id) {
     try {
         const response = await stocksApi.get(`/auth/getStocksList/${id}`);
+        
         if (response.data && response.data.aviso) {
             return { aviso: response.data.aviso };
         }

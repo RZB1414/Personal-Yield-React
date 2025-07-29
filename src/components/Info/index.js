@@ -13,7 +13,8 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
 
     useEffect(() => {
         const grouped = groupDividendsByTicker(filteredDividends)
-        setGroupedByTicker(grouped)                
+        setGroupedByTicker(grouped)
+                     
         
     }, [dividends, filteredDividends, selectedYear, cardValues]);
 
@@ -190,6 +191,9 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
                                 <DeleteIcon
                                     className="delete-cardicon"
                                     onClick={async () => {
+                                        if (!window.confirm(`Delete the card transaction for ${card.bank} ${card.value}?`)) {
+                                            return;
+                                        }
                                         await deleteCardTransaction(card._id);
                                         cardValues.splice(cardValues.indexOf(card), 1); // Remove the card from the local state
                                         setRefresh(prev => prev + 1)

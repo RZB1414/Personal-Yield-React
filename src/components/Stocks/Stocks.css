@@ -28,6 +28,21 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
+.stocks-list-title-BRL {
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.stocks-list-title-USD {
+    font-size: 24px;
+    font-weight: 500;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
 .search-container {
     display: flex;
     justify-content: center;
@@ -127,6 +142,13 @@
     border: none;
     font-size: 16px;
     cursor: pointer;
+}
+
+.no-stocks-message {
+    font-size: 18px;
+    color: #888;
+    text-align: center;
+    margin-top: 20px;
 }
 
 .stock-edit {

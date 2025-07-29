@@ -19,16 +19,6 @@ async function getAllTotalValues(id) {
     }
 }
 
-async function getTotalValueById(id) {
-    try {
-        const response = await totalValuesApi.get(`/auth/getTotalValueBroker/${id}`)
-        return response.data
-    } catch (error) {
-        console.error('Error fetching total value by ID:', error)
-        throw error
-    }
-}
-
 async function addTotalValue(totalValue) {
     try {
         const response = await totalValuesApi.post('/auth/createTotalValueBroker', totalValue)
@@ -50,7 +40,6 @@ async function deleteTotalValue(id) {
 }
 
 export { getAllTotalValues,
-         getTotalValueById,
          addTotalValue,
          deleteTotalValue
         }
