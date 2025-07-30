@@ -484,7 +484,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                             <ul>
                                 {filteredTotalValues.map((value, index) => (
                                     <li key={index}>
-                                        <p>{value.broker.broker} - {months[Number(value.date.split('-')[1]) - 1]} - {value.totalValueInUSD} USD / {value.totalValueInBRL} BRL</p>
+                                        <p>{value.broker.broker} - {months[Number(value.date.split('-')[1]) - 1]} - {Number(value.totalValueInUSD).toFixed(2)} USD / {Number(value.totalValueInBRL).toFixed(2)} BRL</p>
                                         <DeleteIcon className='broker-delete-icon' onClick={() => handleDeleteTotalValue(value)} />
                                     </li>
                                 ))}
