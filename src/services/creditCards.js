@@ -12,6 +12,8 @@ const creditCardsApi = axios.create({
 async function getAllCreditCards(id) {
     try {
         const response = await creditCardsApi.get(`/auth/getAllCreditCards/${id}`)
+        console.log('Credit cards fetched successfully:', response.data);
+        
         
         return response.data
     } catch (error) {
