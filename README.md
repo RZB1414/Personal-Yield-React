@@ -79,6 +79,11 @@ npm install
 npm run dev
 📝 Make sure the backend API is running and accessible.
 
-📫 renanbuiatti14@gmail.com  
+
+## 🧑‍💻 Author
+
+Developed by **Renan Buiatti**
+
+📫 [renanbuiatti14@gmail.com](mailto:renanbuiatti14@gmail.com)  
 🌐 [LinkedIn](https://www.linkedin.com/in/renan-buiatti-13787924a)  
-📷 [Instagram] (https://www.instagram.com/renanbuiatti/)
+📷 [Instagram](https://www.instagram.com/renanbuiatti/)
