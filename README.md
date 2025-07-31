@@ -87,3 +87,13 @@ npm run dev
 
 Developed by **Renan Buiatti**
 
+## 🚀 Technologies used
+
+- [React](https://reactjs.org/)  
+- [Axios](https://axios-http.com/)  
+- [React Router](https://reactrouter.com/)  
+- [CSS Modules]
+- [Create React App]
+- 📫 [renanbuiatti14@gmail.com](mailto:renanbuiatti14@gmail.com)  
+- 🌐 [LinkedIn](https://www.linkedin.com/in/renan-buiatti-13787924a)  
+- 📷 [Instagram](https://www.instagram.com/renanbuiatti/)
