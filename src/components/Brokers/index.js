@@ -512,55 +512,67 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                             </tr>
                         </thead>
                         <tbody>
-                            {brokers.map((broker, brokerIndex) => (
-                                <React.Fragment key={brokerIndex}>
-                                    <tr>
-                                        <td className='broker-name'>{broker.broker}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>USD</td>
-                                        {months.map((_, monthIndex) => {
-                                            const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex);
-                                            const valorization = getValorization(broker.broker, monthIndex);
-                                            const color = valorization && valorization.valorizationUSD !== null
-                                                ? valorization.valorizationUSD < 0 ? '#e53e3e' : '#3182ce'
-                                                : '#3182ce';
-                                            return (
-                                                <React.Fragment key={monthIndex}>
-                                                    <td>{totalUSD.toFixed(2)}</td>
-                                                    <td style={{ fontSize: '0.95em', color: color }}>
-                                                        {valorization && valorization.valorizationUSD !== null
-                                                            ? `${valorization.valorizationUSD.toFixed(2)}%`
-                                                            : '--'}
-                                                    </td>
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </tr>
-                                    <tr>
-                                        <td>BRL</td>
-                                        {months.map((_, monthIndex) => {
-                                            const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex);
-                                            const valorization = getValorization(broker.broker, monthIndex);
-                                            const color = valorization && valorization.valorizationBRL !== null
-                                                ? valorization.valorizationBRL < 0 ? '#e53e3e' : '#3182ce'
-                                                : '#3182ce';
-                                            return (
-                                                <React.Fragment key={monthIndex}>
-                                                    <td>{totalBRL.toFixed(2)}</td>
+                            {brokers
+                                .filter(broker => {
+                                    // Verifica se o broker tem algum valor no ano selecionado
+                                    return totalValues.some(value => {
+                                        if (!value.date) return false;
+                                        const [year] = value.date.split('-');
+                                        return value.broker.broker === broker.broker && Number(year) === selectedYear && (
+                                            parseFloat(value.totalValueInUSD || 0) > 0 ||
+                                            parseFloat(value.totalValueInBRL || 0) > 0
+                                        );
+                                    });
+                                })
+                                .map((broker, brokerIndex) => (
+                                    <React.Fragment key={brokerIndex}>
+                                        <tr>
+                                            <td className='broker-name'>{broker.broker}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>USD</td>
+                                            {months.map((_, monthIndex) => {
+                                                const { totalUSD } = getBrokerMonthlyTotals(broker.broker, monthIndex);
+                                                const valorization = getValorization(broker.broker, monthIndex);
+                                                const color = valorization && valorization.valorizationUSD !== null
+                                                    ? valorization.valorizationUSD < 0 ? '#e53e3e' : '#3182ce'
+                                                    : '#3182ce';
+                                                return (
+                                                    <React.Fragment key={monthIndex}>
+                                                        <td>{totalUSD.toFixed(2)}</td>
+                                                        <td style={{ fontSize: '0.95em', color: color }}>
+                                                            {valorization && valorization.valorizationUSD !== null
+                                                                ? `${valorization.valorizationUSD.toFixed(2)}%`
+                                                                : '--'}
+                                                        </td>
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tr>
+                                        <tr>
+                                            <td>BRL</td>
+                                            {months.map((_, monthIndex) => {
+                                                const { totalBRL } = getBrokerMonthlyTotals(broker.broker, monthIndex);
+                                                const valorization = getValorization(broker.broker, monthIndex);
+                                                const color = valorization && valorization.valorizationBRL !== null
+                                                    ? valorization.valorizationBRL < 0 ? '#e53e3e' : '#3182ce'
+                                                    : '#3182ce';
+                                                return (
+                                                    <React.Fragment key={monthIndex}>
+                                                        <td>{totalBRL.toFixed(2)}</td>
 
-                                                    <td style={{ fontSize: '0.95em', color: color }}>
-                                                        {valorization && valorization.valorizationBRL !== null
-                                                            ? `${valorization.valorizationBRL.toFixed(2)}%`
-                                                            : '--'}
-                                                    </td>
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </tr>
+                                                        <td style={{ fontSize: '0.95em', color: color }}>
+                                                            {valorization && valorization.valorizationBRL !== null
+                                                                ? `${valorization.valorizationBRL.toFixed(2)}%`
+                                                                : '--'}
+                                                        </td>
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tr>
 
-                                </React.Fragment>
-                            ))}
+                                    </React.Fragment>
+                                ))}
                             <tr className='total-row'>
                                 <td>Total USD</td>
                                 {calculateMonthlyTotals().map((totals, monthIndex) => {
