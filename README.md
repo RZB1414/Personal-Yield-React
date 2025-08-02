@@ -15,6 +15,13 @@ I decided to build my own tailored solution — starting with the backend, and n
 
 ---
 
+## 🔐 Data Security
+
+This application prioritizes the security of your financial data.  
+All sensitive information is **encrypted before being stored** in the database,  
+ensuring that your personal and investment records remain private and protected.
+---
+
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)  
 ![Tech](https://img.shields.io/badge/built%20with-React-blue)  
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -28,7 +35,7 @@ I decided to build my own tailored solution — starting with the backend, and n
 - [React Router](https://reactrouter.com/)  
 - [CSS Modules]
 - [Create React App]
-
+  
 ---
 
 ## 📂 Project structure
@@ -72,6 +79,11 @@ npm install
 npm run dev
 📝 Make sure the backend API is running and accessible.
 
-📫 renanbuiatti14@gmail.com  
-🌐 [LinkedIn](https://www.linkedin.com/in/renan-buiatti-13787924a)  
-📷 [Instagram] (https://www.instagram.com/renanbuiatti/)
+
+## 🧑‍💻 Author
+
+Developed by **Renan Buiatti**
+
+📫 renanbuiatti14@gmail.com
+🌐 LinkedIn www.linkedin.com/in/renan-buiatti-13787924a
+📷 Instagram renanbuiatti
