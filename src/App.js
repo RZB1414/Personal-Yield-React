@@ -8,11 +8,13 @@ import Menu from './components/Menu';
 import AddData from './components/AddData';
 import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
+import CookieConsent from './components/CookieConsent';
 import dragon from './assets/sleeping-dragon.png'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
 import { getAllCreditCards } from './services/creditCards';
+
 
 function App() {
 
@@ -23,13 +25,14 @@ function App() {
   const [cardValues, setCardValues] = useState([])
   const [fetchingAgain, setFetchingAgain] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [cookieAccepted, setCookieAccepted] = useState(false);
 
   const handleLogin = () => {
     setIsLoggedIn(true)
   }
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && cookieAccepted) {
       const userId = sessionStorage.getItem('userId');
       const loadData = async () => {
         await fetchDividendsStocks()
@@ -44,19 +47,24 @@ function App() {
       }
       loadData()
     }
-  }, [refresh, isLoggedIn])
+  }, [refresh, isLoggedIn, cookieAccepted])
 
   return (
-    <BrowserRouter>
-      {!isLoggedIn ? (
-        <Home onLogin={handleLogin} />
-      ) : !dataLoaded ? (
-        <div className="loading-container">
-          <h1 className="loading-text">Loading your treasuries...</h1>
-          <img src={dragon} alt='Loading' className='loading-image' />
-        </div>
-      )
-        : (
+    <>
+      <CookieConsent onAccept={() => setCookieAccepted(true)} />
+      <BrowserRouter>
+        {!isLoggedIn ? (
+          <Home onLogin={handleLogin} />
+        ) : !cookieAccepted ? (
+          <div className="loading-container">
+            <h1 className="loading-text">Aguardando consentimento de cookies...</h1>
+          </div>
+        ) : !dataLoaded ? (
+          <div className="loading-container">
+            <h1 className="loading-text">Loading your treasuries...</h1>
+            <img src={dragon} alt='Loading' className='loading-image' />
+          </div>
+        ) : (
           <>
             <Menu setIsLoggedIn={setIsLoggedIn} />
             <Routes>
@@ -77,8 +85,8 @@ function App() {
             </Routes>
           </>
         )}
-
-    </BrowserRouter>
+      </BrowserRouter>
+    </>
   );
 }
 
