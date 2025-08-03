@@ -29,6 +29,9 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
         setTotalValues(totalValuesData);
+
+        console.log('totalvaluesData', totalValuesData);
+        
         
     }, [brokersData, totalValuesData, fetchingAgain])
 
