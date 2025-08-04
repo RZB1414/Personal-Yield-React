@@ -5,9 +5,19 @@ const totalValuesApi = axios.create({
     baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json'
-    },
-    withCredentials: true
-})
+    }
+});
+
+totalValuesApi.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('accessToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 async function getAllTotalValues(id) {
     try {

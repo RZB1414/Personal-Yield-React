@@ -92,15 +92,24 @@ const LoginForm = ({ onLogin }) => {
                 password: hashedPassword
             };
             const response = await loginUser(loginData);
-            const userData = await getCurrentUser();
-            password = form.password; // Armazenar a senha em uma variável global
-            sessionStorage.setItem('userId', userData.id);            
-
-            setMessage("Login realizado com sucesso!");
-
-            if (onLogin) onLogin(response);
-
-            setForm({ email: "", password: "" });
+            // Aguarda o token ser salvo
+            const token = sessionStorage.getItem('accessToken');
+            if (token) {
+                try {
+                    const userData = await getCurrentUser();
+                    if (userData && userData.id) {
+                        sessionStorage.setItem('userId', userData.id);
+                    }
+                } catch (e) {
+                    // Se não conseguir obter o userId, continue sem ele
+                }
+                password = form.password; // Armazenar a senha em uma variável global
+                setMessage("Login realizado com sucesso!");
+                if (onLogin) onLogin(response);
+                setForm({ email: "", password: "" });
+            } else {
+                setMessage("Erro ao salvar token de autenticação.");
+            }
         } catch (error) {
             setMessage("Erro ao fazer login. Verifique suas credenciais.");
         }

@@ -28,10 +28,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     useEffect(() => {
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
-        setTotalValues(totalValuesData);
-
-        console.log('totalvaluesData', totalValuesData);
-        
+        setTotalValues(totalValuesData);        
         
     }, [brokersData, totalValuesData, fetchingAgain])
 

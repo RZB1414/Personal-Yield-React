@@ -8,7 +8,6 @@ import Menu from './components/Menu';
 import AddData from './components/AddData';
 import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
-import CookieConsent from './components/CookieConsent';
 import dragon from './assets/sleeping-dragon.png'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
@@ -25,14 +24,13 @@ function App() {
   const [cardValues, setCardValues] = useState([])
   const [fetchingAgain, setFetchingAgain] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [cookieAccepted, setCookieAccepted] = useState(false);
 
   const handleLogin = () => {
     setIsLoggedIn(true)
   }
 
   useEffect(() => {
-    if (isLoggedIn && cookieAccepted) {
+    if (isLoggedIn) {
       const userId = sessionStorage.getItem('userId');
       const loadData = async () => {
         await fetchDividendsStocks()
@@ -47,46 +45,39 @@ function App() {
       }
       loadData()
     }
-  }, [refresh, isLoggedIn, cookieAccepted])
+  }, [refresh, isLoggedIn])
 
   return (
-    <>
-      <CookieConsent onAccept={() => setCookieAccepted(true)} />
-      <BrowserRouter>
-        {!isLoggedIn ? (
-          <Home onLogin={handleLogin} />
-        ) : !cookieAccepted ? (
-          <div className="loading-container">
-            <h1 className="loading-text">Aguardando consentimento de cookies...</h1>
-          </div>
-        ) : !dataLoaded ? (
-          <div className="loading-container">
-            <h1 className="loading-text">Loading your treasuries...</h1>
-            <img src={dragon} alt='Loading' className='loading-image' />
-          </div>
-        ) : (
-          <>
-            <Menu setIsLoggedIn={setIsLoggedIn} />
-            <Routes>
-              <Route path="/home" element={<Home onLogin={handleLogin} />} />
-              <Route path="/logon" element={<Logon />} />
-              <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh} />} />
-              <Route path="/dividends" element={<Dividends fetchingAgain={fetchingAgain} />} />
-              <Route path="/info" element={<Info filteredDividends={filteredDividends}
-                dividends={dividends}
-                brokersData={brokersData}
-                totalValuesData={totalValuesData}
-                cardValues={cardValues}
-                fetchingAgain={fetchingAgain}
-                setRefresh={setRefresh}
-              />} />
-              <Route path='/add' element={<AddData setRefresh={setRefresh} totalValuesData={totalValuesData} />} />
-              <Route path="*" element={<h1>404 Not Found</h1>} />
-            </Routes>
-          </>
-        )}
-      </BrowserRouter>
-    </>
+    <BrowserRouter>
+      {!isLoggedIn ? (
+        <Home onLogin={handleLogin} />
+      ) : !dataLoaded ? (
+        <div className="loading-container">
+          <h1 className="loading-text">Loading your treasuries...</h1>
+          <img src={dragon} alt='Loading' className='loading-image' />
+        </div>
+      ) : (
+        <>
+          <Menu setIsLoggedIn={setIsLoggedIn} />
+          <Routes>
+            <Route path="/home" element={<Home onLogin={handleLogin} />} />
+            <Route path="/logon" element={<Logon />} />
+            <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh} />} />
+            <Route path="/dividends" element={<Dividends fetchingAgain={fetchingAgain} />} />
+            <Route path="/info" element={<Info filteredDividends={filteredDividends}
+              dividends={dividends}
+              brokersData={brokersData}
+              totalValuesData={totalValuesData}
+              cardValues={cardValues}
+              fetchingAgain={fetchingAgain}
+              setRefresh={setRefresh}
+            />} />
+            <Route path='/add' element={<AddData setRefresh={setRefresh} totalValuesData={totalValuesData} />} />
+            <Route path="*" element={<h1>404 Not Found</h1>} />
+          </Routes>
+        </>
+      )}
+    </BrowserRouter>
   );
 }
 

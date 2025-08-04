@@ -7,9 +7,19 @@ const dividendsApi = axios.create({
     baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json'
-    },
-    withCredentials: true
-})
+    }
+});
+
+dividendsApi.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('accessToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Deriva uma chave AES-GCM a partir da senha e salt
 async function deriveKey(password, salt) {
