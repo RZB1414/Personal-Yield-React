@@ -1,8 +1,7 @@
 .broker-container {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    margin: 20px auto;
-    max-width: 600px;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -46,11 +45,53 @@
 .broker-form {
     display: flex;
     flex-direction: column;
-    align-items: left;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.broker-form > div,
+.broker-add-container,
+.broker-add-total-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.broker-form .broker-input,
+.broker-form .broker-select-broker {
+    width: 50%;
+    min-width: 220px;
+    max-width: 400px;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }
 
 .broker-input {
-    width: calc(50% - 10px);
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.broker-input-data {
+    width: 40%;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.broker-input-total {
+    width: 40%;
     padding: 10px;
     margin: 5px;
     border: 1px solid #ccc;
@@ -69,21 +110,43 @@
     font-size: 14px;
 }
 
+.broker-button-value {
+    width: 50%;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 10px auto;
+}
+
 .broker-label {
     display: block;
-    margin: 10px 0 5px;
+    margin: 10px 0 5px 10px;
     font-weight: bold;
     color: #555;
 }
 
-.broker-select {
-    width: 90%;
-    padding: 10px;
-    margin: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+.broker-add-total-container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.broker-select-broker {
     background-color: #fff;
+    text-align: center;
+    width: 50%;
+    min-width: 220px;
+    max-width: 400px;
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }
 
 .broker-option {
@@ -235,4 +298,35 @@
 .broker-search-results p {
     margin: 0;
     font-size: 1.1rem;
+}
+
+/* Currency Autocomplete Styles */
+.currency-autocomplete-wrapper {
+}
+
+.currency-autocomplete-input {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.currency-autocomplete-list {
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    margin: 0;
+    padding: 0;
+}
+
+.currency-autocomplete-item {
+    padding: 8px;
+    cursor: pointer;
+    color: #222;
+}
+
+.currency-autocomplete-item:hover {
+    background: #f0f0f0;
 }

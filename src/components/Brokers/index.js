@@ -7,7 +7,48 @@ import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg';
 import { addTotalValue, deleteTotalValue } from '../../services/totalValues';
 
+// Lista das principais moedas do mundo
+const CURRENCIES = [
+  { code: 'USD', name: 'US Dollar' },
+  { code: 'EUR', name: 'Euro' },
+  { code: 'BRL', name: 'Brazilian Real' },
+  { code: 'GBP', name: 'British Pound' },
+  { code: 'JPY', name: 'Japanese Yen' },
+  { code: 'CHF', name: 'Swiss Franc' },
+  { code: 'CAD', name: 'Canadian Dollar' },
+  { code: 'AUD', name: 'Australian Dollar' },
+  { code: 'CNY', name: 'Chinese Yuan' },
+  { code: 'INR', name: 'Indian Rupee' },
+  { code: 'RUB', name: 'Russian Ruble' },
+  { code: 'ARS', name: 'Argentine Peso' },
+  { code: 'MXN', name: 'Mexican Peso' },
+  { code: 'ZAR', name: 'South African Rand' },
+  { code: 'TRY', name: 'Turkish Lira' },
+  { code: 'KRW', name: 'South Korean Won' },
+  { code: 'HKD', name: 'Hong Kong Dollar' },
+  { code: 'SGD', name: 'Singapore Dollar' },
+  { code: 'SEK', name: 'Swedish Krona' },
+  { code: 'NOK', name: 'Norwegian Krone' },
+  { code: 'NZD', name: 'New Zealand Dollar' },
+  { code: 'PLN', name: 'Polish Zloty' },
+  { code: 'DKK', name: 'Danish Krone' },
+  { code: 'CLP', name: 'Chilean Peso' },
+  { code: 'COP', name: 'Colombian Peso' },
+  { code: 'IDR', name: 'Indonesian Rupiah' },
+  { code: 'THB', name: 'Thai Baht' },
+  { code: 'EGP', name: 'Egyptian Pound' },
+  { code: 'SAR', name: 'Saudi Riyal' },
+  { code: 'AED', name: 'UAE Dirham' },
+];
+
 const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) => {
+    const [currencySearch, setCurrencySearch] = useState('');
+    const filteredCurrencies = CURRENCIES.filter(currency =>
+        currency.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
+        currency.name.toLowerCase().includes(currencySearch.toLowerCase())
+    );
+    const [isSearchingCurrency, setIsSearchingCurrency] = useState(false);
+
     const [brokers, setBrokers] = useState(brokersData || []);
     const [newBrokerName, setNewBrokerName] = useState('');
     const [newBrokerCurrency, setNewBrokerCurrency] = useState('');
@@ -310,19 +351,27 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     return (
         <>
             {isAddingTotalValue ?
+                <div className='broker-add-total-container'>
                 <div className='broker-container'>
                     <h2 className='broker-tittle'>Brokers</h2>
-                    <CloseIcon className='broker-close-icon' onClick={() => {
-                        setIsAddingTotalValue(false);
-                        setIsAddingBroker(false);
-                        setSelectedBroker(null);
-                        setAmountBRL('');
-                        setAmountUSD('');
-                        setDollarRate(null);
-                    }} />
+                    {isAddingBroker ? null :
+                        <CloseIcon className='broker-close-icon' onClick={() => {
+                            setIsAddingTotalValue(false);
+                            setIsAddingBroker(false);
+                            setSelectedBroker(null);
+                            setAmountBRL('');
+                            setAmountUSD('');
+                            setDollarRate(null);
+                        }} />
+                    }
+                    
                     {isAddingBroker ?
                         <div className='broker-add-container'>
-                            <CloseIcon className='broker-close-icon' onClick={() => setIsAddingBroker(false)} />
+                            <CloseIcon className='broker-close-icon' 
+                            onClick={() => {
+                                setIsAddingBroker(false) 
+                                setCurrencySearch('')}} 
+                                />
                             <input
                                 className='broker-input'
                                 type="text"
@@ -330,13 +379,42 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                 onChange={(e) => setNewBrokerName(e.target.value)}
                                 placeholder="Broker Name"
                             />
-                            <input
-                                className='broker-input'
-                                type="text"
-                                value={newBrokerCurrency}
-                                onChange={(e) => setNewBrokerCurrency(e.target.value)}
-                                placeholder="Currency"
-                            />
+                            {/* Autocomplete de moeda */}
+                            <div className="currency-autocomplete-wrapper">
+                                <input
+                                    className='currency-autocomplete-input'
+                                    type="text"
+                                    value={currencySearch || ''}
+                                    onChange={e => {
+                                        setCurrencySearch(e.target.value);
+                                        setNewBrokerCurrency(e.target.value);
+                                        setIsSearchingCurrency(true)
+                                    }}
+                                    placeholder="Currency"
+                                    autoComplete="off"
+                                />
+                                {isSearchingCurrency ?
+                                (currencySearch && filteredCurrencies.length > 0 && (
+                                    <ul className="currency-autocomplete-list">
+                                        {filteredCurrencies.map((currency, idx) => (
+                                            <li
+                                                key={idx}
+                                                className="currency-autocomplete-item"
+                                                onClick={() => {
+                                                    setNewBrokerCurrency(currency.code);
+                                                    setCurrencySearch(currency.code);
+                                                    setIsSearchingCurrency(false);
+                                                }}
+                                            >
+                                                {currency.code} - {currency.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ))
+                                : null
+                            }
+                                
+                            </div>
                             <button className='broker-button' onClick={handleAddBroker}>Add Broker</button>
                         </div>
                         : null
@@ -345,7 +423,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                     <div>
                         <label className='broker-label' htmlFor="brokerSelect">Select a Broker:</label>
                         <select
-                            className='broker-select'
+                            className='broker-select-broker'
                             id="brokerSelect"
                             onChange={(e) => {
                                 if (e.target.value === "Add New Broker") {
@@ -370,7 +448,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                     </div>
                     <form onSubmit={handleAddTotalValue} className='broker-form'>
                         <input
-                            className='broker-input'
+                            className='broker-input-data'
                             type="date"
                             placeholder="Date"
                             onChange={(e) => {
@@ -379,7 +457,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                         />
                         <div className='broker-amount-container'>
                             <input
-                                className='broker-input'
+                                className='broker-input-total'
                                 type="number"
                                 placeholder="Total Amount"
                                 value={amountUSD}
@@ -402,7 +480,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
 
                         <div className='broker-amount-container'>
                             <input
-                                className='broker-input'
+                                className='broker-input-total'
                                 type="number"
                                 placeholder="Total Amount"
                                 value={amountBRL}
@@ -416,9 +494,10 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                 : null
                             }
                         </div>
-                        <button className='broker-button' type="submit">Add Total Value</button>
+                        <button className='broker-button-value' type="submit">Add Total Value</button>
 
                     </form>
+                </div>
                 </div>
                 : null
             }
