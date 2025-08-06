@@ -5,6 +5,7 @@ import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg';
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg';
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg';
+import { ReactComponent as DateIcon } from '../../assets/icons/date-icon.svg';
 import { addTotalValue, deleteTotalValue } from '../../services/totalValues';
 
 // Lista das principais moedas do mundo
@@ -42,6 +43,7 @@ const CURRENCIES = [
 ];
 
 const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) => {
+    const [selectedDate, setSelectedDate] = useState('');
     const [currencySearch, setCurrencySearch] = useState('');
     const filteredCurrencies = CURRENCIES.filter(currency =>
         currency.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
@@ -362,6 +364,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                             setAmountBRL('');
                             setAmountUSD('');
                             setDollarRate(null);
+                            setSelectedDate('');
                         }} />
                     }
                     
@@ -419,7 +422,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                         </div>
                         : null
                     }
-
+                    
                     <div>
                         <label className='broker-label' htmlFor="brokerSelect">Select a Broker:</label>
                         <select
@@ -447,14 +450,29 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                         </select>
                     </div>
                     <form onSubmit={handleAddTotalValue} className='broker-form'>
-                        <input
-                            className='broker-input-data'
-                            type="date"
-                            placeholder="Date"
-                            onChange={(e) => {
-                                fetchDollarRate(e.target.value);
-                            }}
-                        />
+                        <div className='broker-date-container'>
+                            {selectedDate && (
+                                <span style={{ fontSize: '1em', color: '#444' }}>{selectedDate}</span>
+                            )}
+                            <DateIcon 
+                                className='broker-date-icon'                                 
+                                onClick={() => {
+                                    const dateInput = document.getElementById('dateInput');
+                                    if (dateInput) dateInput.showPicker();
+                                }}
+                            />
+                            
+                            <input
+                                id="dateInput"
+                                className='broker-input-data'
+                                type="date"
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    setSelectedDate(e.target.value);
+                                    fetchDollarRate(e.target.value);
+                                }}
+                            />
+                        </div>
                         <div className='broker-amount-container'>
                             <input
                                 className='broker-input-total'
@@ -473,7 +491,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                         </div>
 
                         {dollarRate && (
-                            <div style={{ marginTop: 8, marginLeft: 20, color: '#3182ce' }}>
+                            <div style={{ color: '#3182ce' }}>
                                 USD/BRL: R$ {parseFloat(dollarRate).toFixed(4)}
                             </div>
                         )}

@@ -42,36 +42,6 @@
     cursor: pointer;
 }
 
-.broker-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.broker-form > div,
-.broker-add-container,
-.broker-add-total-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
-.broker-form .broker-input,
-.broker-form .broker-select-broker {
-    width: 50%;
-    min-width: 220px;
-    max-width: 400px;
-    box-sizing: border-box;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-}
-
 .broker-input {
     padding: 10px;
     margin: 5px;
@@ -97,6 +67,21 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
+}
+
+.broker-date-container {
+    width: 50%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 5px 0;
+    justify-content: space-around;
+}
+
+.broker-date-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 .broker-button {
@@ -167,9 +152,18 @@
     margin-top: 20px;
 }
 
+.broker-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+}
+
 .broker-amount-container {
     display: flex;
-    align-items: center;
+    width: 100%;
+    justify-content: center;
 }
 
 .broker-table-wrapper {
@@ -301,8 +295,6 @@
 }
 
 /* Currency Autocomplete Styles */
-.currency-autocomplete-wrapper {
-}
 
 .currency-autocomplete-input {
     margin-bottom: 10px;
