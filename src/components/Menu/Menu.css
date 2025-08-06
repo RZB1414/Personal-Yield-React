@@ -24,6 +24,11 @@ h2 {
     -webkit-user-select: none;
     -ms-user-select: none;
 }
+h1, h2, h3, button {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
 
 .add-icon {
     width: 30px;

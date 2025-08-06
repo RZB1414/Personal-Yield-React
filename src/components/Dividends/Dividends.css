@@ -16,6 +16,11 @@
     -webkit-user-select: none;
     -ms-user-select: none;
 }
+h1, h2, h3, button {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
 
 .dividends-buttons {
     display: flex;

@@ -1,3 +1,9 @@
+/* Evita seleção de texto em títulos e botões do Info */
+h1, h2, h3, button {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
 .delete-cardicon {
     margin-left: 12px;
     width: 20px;
