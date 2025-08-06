@@ -21,6 +21,11 @@ h1, h2, h3, button {
     -webkit-user-select: none;
     -ms-user-select: none;
 }
+h1, h2, h3, button, p, span {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
 
 .dividends-buttons {
     display: flex;

@@ -111,6 +111,11 @@ h1, h2, h3, button {
     -webkit-user-select: none;
     -ms-user-select: none;
 }
+h1, h2, h3, button, p, span {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
 
 .search-icon {
     width: 40px;

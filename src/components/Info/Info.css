@@ -1,5 +1,5 @@
 /* Evita seleção de texto em títulos e botões do Info */
-h1, h2, h3, button {
+ h1, h2, h3, button, p, span {
     user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
