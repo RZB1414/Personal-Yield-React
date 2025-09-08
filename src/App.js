@@ -6,9 +6,10 @@ import Stocks from './components/Stocks';
 import Info from './components/Info';
 import Menu from './components/Menu';
 import AddData from './components/AddData';
+import BtgDividends from './components/BtgDividends';
 import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
-import dragon from './assets/sleeping-dragon.png'
+import dragon from './assets/sleeping-dragon.jpeg'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
@@ -64,6 +65,7 @@ function App() {
             <Route path="/logon" element={<Logon />} />
             <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh} />} />
             <Route path="/dividends" element={<Dividends fetchingAgain={fetchingAgain} />} />
+            <Route path="/btg-dividends" element={<BtgDividends />} />
             <Route path="/info" element={<Info filteredDividends={filteredDividends}
               dividends={dividends}
               brokersData={brokersData}

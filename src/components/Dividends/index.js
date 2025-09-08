@@ -1,6 +1,8 @@
 import './Dividends.css'
 import { useEffect, useState } from 'react'
 import { dividends } from '../Connect'
+import { btgDividends } from '../Connect'
+import { ReactComponent as BrokerIcon } from '../../assets/icons/broker-icon.svg'
 
 const Dividends = ({ fetchingAgain }) => {
 
@@ -17,36 +19,78 @@ const Dividends = ({ fetchingAgain }) => {
     const [showMonthFilter, setShowMonthFilter] = useState(false)
     const [showYearFilter, setShowYearFilter] = useState(false)
     const [noDividends, setNoDividends] = useState(false)
+    const [selectedBroker, setSelectedBroker] = useState('ALL') // ALL default to show union
+    const [showBrokerSelect, setShowBrokerSelect] = useState(false)
+    const [combinedList, setCombinedList] = useState([])
 
     useEffect(() => {
+        // Reset states when switching broker or refetching
         setNoDividends(false);
-        if (dividends?.dividends?.length > 0) {
-            setDividendsList(dividends.dividends)
-            // Calcula as datas de início e fim gerais
-            const startDate = dividends.dividends.reduce(
+        setFilteredDividends([])
+        setGroupedDividends({})
+        setShowingAllPeriod(false)
+        setShowingDetailed(false)
+
+        console.log('xpDividends:', dividends);
+            console.log('btgDividends:', btgDividends);
+        
+
+        let sourceList = []
+
+        // Normaliza listas para junção
+        const xpList = (dividends?.dividends || []).map(d => ({
+            ...d,
+            liquidacao: d.liquidacao || d.date, // segurança
+            valor: typeof d.valor === 'number' ? d.valor : Number(d.valor) || 0
+        }))
+        const btgList = (btgDividends || []).map(d => ({
+            ...d,
+            liquidacao: d.liquidacao || d.date,
+            valor: typeof d.valor === 'number' ? d.valor : Number(d.valor) || 0
+        }))
+        const merged = [...xpList, ...btgList]
+        setCombinedList(merged)
+        if (selectedBroker === 'XP') {
+            if (dividends?.dividends?.length > 0) {
+                sourceList = dividends.dividends
+            }
+        } else if (selectedBroker === 'BTG') {
+            if (btgDividends?.length > 0) {
+                // Mapeia para o formato esperado (usa 'date' ou 'liquidacao')
+                sourceList = btgDividends.map(d => ({
+                    ...d,
+                    liquidacao: d.liquidacao || d.date, // unifica campo de data
+                    valor: typeof d.valor === 'number' ? d.valor : Number(d.valor) || 0
+                }))
+            }
+        } else if (selectedBroker === 'ALL') {
+            sourceList = merged
+        }
+
+        if (sourceList.length > 0) {
+            setDividendsList(sourceList)
+            // Calcula datas gerais
+            const startDate = sourceList.reduce(
                 (earliest, dividend) =>
                     new Date(dividend.liquidacao) < new Date(earliest)
                         ? dividend.liquidacao
                         : earliest,
-                dividends.dividends[0]?.liquidacao || ''
-            );
-
-            const endDate = dividends.dividends.reduce(
+                sourceList[0]?.liquidacao || ''
+            )
+            const endDate = sourceList.reduce(
                 (latest, dividend) =>
                     new Date(dividend.liquidacao) > new Date(latest)
                         ? dividend.liquidacao
                         : latest,
-                dividends.dividends[0]?.liquidacao || ''
-            );
-
-            // Formata as datas no formato DD/MM/YYYY
-            setOverallStartDate(new Date(startDate).toLocaleDateString('pt-BR'));
-            setOverallEndDate(new Date(endDate).toLocaleDateString('pt-BR'));
+                sourceList[0]?.liquidacao || ''
+            )
+            setOverallStartDate(startDate ? new Date(startDate).toLocaleDateString('pt-BR') : '')
+            setOverallEndDate(endDate ? new Date(endDate).toLocaleDateString('pt-BR') : '')
         } else {
-            setDividendsList([]);
+            setDividendsList([])
             setNoDividends(true)
         }
-    }, [fetchingAgain])
+    }, [fetchingAgain, selectedBroker])
 
     useEffect(() => {
         // Agrupa os dividendos por ticker e soma os valores
@@ -71,7 +115,8 @@ const Dividends = ({ fetchingAgain }) => {
     // Funções de filtro
     const filterByCurrentMonth = () => {
         const now = new Date();
-        const filtered = dividendsList.filter(dividend => {
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    const filtered = base.filter(dividend => {
             const date = new Date(dividend.liquidacao);
             return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
         });
@@ -83,7 +128,8 @@ const Dividends = ({ fetchingAgain }) => {
     };
 
     const filterBySelectedMonth = () => {
-        const filtered = dividendsList.filter(dividend => {
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    const filtered = base.filter(dividend => {
             const date = new Date(dividend.liquidacao);
             return date.getMonth() === selectedMonth && date.getFullYear() === new Date().getFullYear();
         });
@@ -95,7 +141,8 @@ const Dividends = ({ fetchingAgain }) => {
 
     const filterByCurrentYear = () => {
         const now = new Date();
-        const filtered = dividendsList.filter(dividend => {
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    const filtered = base.filter(dividend => {
             const date = new Date(dividend.liquidacao);
             return date.getFullYear() === now.getFullYear();
         });
@@ -107,7 +154,8 @@ const Dividends = ({ fetchingAgain }) => {
     };
 
     const filterByYear = () => {
-        const filtered = dividendsList.filter(dividend => {
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    const filtered = base.filter(dividend => {
             const date = new Date(dividend.liquidacao);
             return date.getFullYear() === selectedYear;
         });
@@ -118,7 +166,8 @@ const Dividends = ({ fetchingAgain }) => {
     };
 
     const filterByAllTime = () => {
-        setFilteredDividends(dividendsList);
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    setFilteredDividends(base);
         setShowingAllPeriod(true);
         setShowingDetailed(false);
         setShowYearFilter(false);
@@ -145,7 +194,8 @@ const Dividends = ({ fetchingAgain }) => {
 
     const getAvailableYears = () => {
         // Extrai os anos únicos da lista de dividendos
-        const years = [...new Set(dividendsList.map(dividend => new Date(dividend.liquidacao).getFullYear()))];
+    const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
+    const years = [...new Set(base.map(dividend => new Date(dividend.liquidacao).getFullYear()))];
         return years.sort((a, b) => b - a); // Ordena os anos em ordem decrescente
     }
 
@@ -158,8 +208,9 @@ const Dividends = ({ fetchingAgain }) => {
         // Extrai os meses únicos da lista de dividendos no ano atual
         const now = new Date();
         const currentYear = now.getFullYear();
+        const base = selectedBroker === 'ALL' ? combinedList : dividendsList;
         const months = [...new Set(
-            dividendsList
+            base
                 .filter(dividend => new Date(dividend.liquidacao).getFullYear() === currentYear)
                 .map(dividend => new Date(dividend.liquidacao).getMonth())
         )];
@@ -171,9 +222,28 @@ const Dividends = ({ fetchingAgain }) => {
         setShowYearFilter(false)
     }
 
+    const handleBrokerChange = (e) => {
+        setSelectedBroker(e.target.value)
+    }
+
+    const toggleBrokerSelect = () => {
+        setShowBrokerSelect(prev => !prev)
+    }
+
     return (
         <div className="dividends-container">
             <h1 className='dividends-title'>Dividends</h1>
+            <BrokerIcon className='dividends-broker-icon' onClick={toggleBrokerSelect} style={{ cursor: 'pointer' }} />
+            {showBrokerSelect && (
+                <div className='dividends-broker-select'>
+                    <label htmlFor="broker-select">Broker:</label>
+                    <select id="broker-select" value={selectedBroker} onChange={handleBrokerChange} className='dividends-year-select'>
+                        <option value="ALL">ALL</option>
+                        <option value="XP">XP</option>
+                        <option value="BTG">BTG</option>
+                    </select>
+                </div>
+            )}
 
             {noDividends ? (
                 <p className='dividends-no-data'>No Dividends To Show</p>

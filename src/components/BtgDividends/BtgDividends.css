@@ -1,0 +1,48 @@
+.btg-dividends-container {
+	padding: 16px;
+}
+
+.btg-title {
+	margin: 0 0 12px;
+}
+
+.btg-upload {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.btg-status { color: #666; }
+.btg-error { color: #c00; }
+
+.btg-filters, .btg-detail-toggle, .btg-year-filter {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 0;
+}
+
+.btg-btn {
+	padding: 6px 10px;
+	border: 1px solid #ccc;
+	background: #f7f7f7;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.btg-btn:hover { background: #eee; }
+
+.btg-total { margin: 12px 0; }
+
+.btg-list { list-style: none; padding: 0; margin: 0; }
+.btg-list-item {
+	display: grid;
+	grid-template-columns: 120px 1fr 140px;
+	gap: 8px;
+	border-bottom: 1px solid #eee;
+	padding: 8px 0;
+}
+.btg-ticker { font-weight: 600; }
+.btg-valor { text-align: right; }
+.btg-no-data { color: #666; }
+

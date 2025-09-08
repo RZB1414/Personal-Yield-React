@@ -3,9 +3,12 @@ import { getStocksList, stockData } from "../../services/stocks"
 import './Connect.css';
 import { getCurrentUser, loginUser } from '../../services/login'
 import { useState } from 'react';
+import { getBtgDividends } from "../../services/btgDividends";
 
 let filteredDividends = [];
 let dividends = [];
+let btgDividends = [];
+let btgTransactions = [];
 let stocks = [];
 let updated = [];
 let decryptedDividends = [];
@@ -50,11 +53,22 @@ const fetchDividendsStocks = async () => {
             )
 
             dividends = allDividends
+
+            console.log('Dividends:', dividends);
+            console.log('Filtered Dividends:', filteredDividends);
+            
         }
-        else {
-            console.warn('No dividends available');
-            filteredDividends = []
-            dividends = []
+
+        const btgResponse = await getBtgDividends(userId)
+        if (btgResponse && Array.isArray(btgResponse.dividends) && (btgResponse.dividends.length || btgResponse.transactions.length) > 0) {
+            btgDividends = btgResponse.dividends
+            btgTransactions = btgResponse.transactions
+            console.log('CONNECT BTG Dividends:', btgDividends);
+            console.log('CONNECT BTG Transactions:', btgTransactions);
+        } else {
+            console.warn('No BTG dividends available');
+            btgDividends = []
+            btgTransactions = []
         }
     } catch (error) {
         console.error('Error fetching Data:', error);
@@ -142,4 +156,4 @@ const LoginForm = ({ onLogin }) => {
     );
 };
 
-export { fetchDividendsStocks, LoginForm, filteredDividends, dividends, stocks, updated, decryptedDividends }
+export { fetchDividendsStocks, LoginForm, filteredDividends, dividends, stocks, updated, decryptedDividends, btgDividends, btgTransactions }

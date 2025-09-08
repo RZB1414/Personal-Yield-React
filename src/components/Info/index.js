@@ -3,6 +3,7 @@ import './Info.css';
 import { useEffect, useState } from 'react';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg';
+import { btgTransactions } from '../Connect';
 import { deleteCardTransaction } from '../../services/creditCards';
 
 const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, cardValues, fetchingAgain,setRefresh }) => {
@@ -13,9 +14,19 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
 
     useEffect(() => {
         const grouped = groupDividendsByTicker(filteredDividends)
-        setGroupedByTicker(grouped)
-                     
-        
+        // Agrega NOTA BTG a partir de btgTransactions
+        const btgAgg = aggregateBtgTransactions(btgTransactions, selectedYear)
+        const merged = { ...grouped }
+        if (btgAgg) {
+            if (!merged['NOTA BTG']) merged['NOTA BTG'] = { total: 0 }
+            // mes -> valor
+            Object.entries(btgAgg.months).forEach(([m, v]) => {
+                merged['NOTA BTG'][m] = v
+            })
+            merged['NOTA BTG'].total = btgAgg.total
+        }
+        setGroupedByTicker(merged)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dividends, filteredDividends, selectedYear, cardValues]);
 
 
@@ -43,6 +54,26 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
         });
 
         return grouped;
+    };
+
+    // Agrega btgTransactions para linha NOTA BTG
+    const aggregateBtgTransactions = (transactions, year) => {
+        if (!Array.isArray(transactions)) return null;
+        const monthsData = {};
+        let total = 0;
+        transactions.forEach(t => {
+            if (!t.date && !t.liquidacao) return;
+            const lanc = (t.lancamento || '').toUpperCase();
+            if (!['COMPRA', 'VENDA'].includes(lanc)) return; // apenas COMPRA / VENDA
+            const d = new Date(t.liquidacao || t.date);
+            if (isNaN(d) || d.getFullYear() !== year) return;
+            const month = d.toLocaleString('default', { month: 'long' });
+            const valRaw = typeof t.valor === 'number' ? t.valor : Number(t.valor) || 0;
+            // Mantém sinal já ajustado (VENDA já veio negativa no parser)
+            monthsData[month] = (monthsData[month] || 0) + valRaw;
+            total += valRaw;
+        });
+        return { months: monthsData, total };
     };
 
 
@@ -101,7 +132,7 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
                         <tbody>
                             {/* Linha 1: NOTA */}
                             <tr>
-                                <td className="sticky-column">Nota</td>
+                                <td className="sticky-column">Nota XP</td>
                                 {Array.from({ length: 12 }, (_, i) =>
                                     new Date(0, i).toLocaleString('default', { month: 'long' })
                                 ).map((month) => (
@@ -109,6 +140,18 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
                                 ))}
                                 <td className='month-cell-total'>{groupedByTicker["NOTA"]?.total ? `R$ ${groupedByTicker["NOTA"].total.toFixed(2)}` : '-'}</td>
                             </tr>
+                            {/* Linha 1b: NOTA BTG */}
+                            <tr>
+                                <td className="sticky-column">Nota BTG</td>
+                                {Array.from({ length: 12 }, (_, i) =>
+                                    new Date(0, i).toLocaleString('default', { month: 'long' })
+                                ).map((month) => (
+                                    <td className='month-cell' key={month}>{groupedByTicker["NOTA BTG"]?.[month] ? `R$ ${groupedByTicker["NOTA BTG"][month].toFixed(2)}` : '-'}</td>
+                                ))}
+                                <td className='month-cell-total'>{groupedByTicker["NOTA BTG"]?.total ? `R$ ${groupedByTicker["NOTA BTG"].total.toFixed(2)}` : '-'}</td>
+                            </tr>
+
+
 
                             {/* Linha 2: RENDIMENTO RENDA FIXA */}
                             <tr>
