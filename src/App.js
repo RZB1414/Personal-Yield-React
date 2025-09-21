@@ -6,10 +6,9 @@ import Stocks from './components/Stocks';
 import Info from './components/Info';
 import Menu from './components/Menu';
 import AddData from './components/AddData';
-import BtgDividends from './components/BtgDividends';
 import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
-import dragon from './assets/sleeping-dragon.jpeg'
+import loadingVideo from './assets/dragon-video.mp4'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
@@ -55,7 +54,14 @@ function App() {
       ) : !dataLoaded ? (
         <div className="loading-container">
           <h1 className="loading-text">Loading your treasuries...</h1>
-          <img src={dragon} alt='Loading' className='loading-image' />
+          <video
+            className="loading-video"
+            src={loadingVideo}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+          />
         </div>
       ) : (
         <>
@@ -65,7 +71,6 @@ function App() {
             <Route path="/logon" element={<Logon />} />
             <Route path="/" element={<Stocks fetchingAgain={fetchingAgain} setRefresh={setRefresh} />} />
             <Route path="/dividends" element={<Dividends fetchingAgain={fetchingAgain} />} />
-            <Route path="/btg-dividends" element={<BtgDividends />} />
             <Route path="/info" element={<Info filteredDividends={filteredDividends}
               dividends={dividends}
               brokersData={brokersData}

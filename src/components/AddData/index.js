@@ -2,6 +2,7 @@ import './AddData.css';
 import { useState, useEffect } from 'react';
 import { createCardTransaction, getAllCreditCards } from '../../services/creditCards';
 import { readFile } from '../../services/dividends';
+import { saveBtgDividends } from '../../services/btgDividends';
 import { loginUser } from '../../services/login';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 
@@ -15,7 +16,6 @@ import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
     }
-
 
 const AddData = ({ setRefresh }) => {
     const [bank, setBank] = useState('');
@@ -31,10 +31,11 @@ const AddData = ({ setRefresh }) => {
     const [fileName, setFileName] = useState('Select a file')
     const [selectedFile, setSelectedFile] = useState(null)
     const [isUploadingFile, setIsUploadingFile] = useState(false);
-    const [fileType, setFileType] = useState('pc');
+    const [fileType, setFileType] = useState('pc'); // only used for XP
     const [dividendsPassword, setDividendsPassword] = useState('');
     const [dividendsEmail, setDividendsEmail] = useState('');
     const [showDividendsPassword, setShowDividendsPassword] = useState(false);
+    const [broker, setBroker] = useState(''); // agora inicia sem broker definido
 
     // Adapte para receber userId como prop se necessário
     const userId = sessionStorage.getItem('userId')
@@ -57,6 +58,19 @@ const AddData = ({ setRefresh }) => {
             fetchBanks();
         }
     }, [isAddingCard, userId]);
+
+    // Reset file inputs when broker changes
+    useEffect(() => {
+        setSelectedFile(null);
+        setFileName('Select a file');
+        // Keep fileType only if broker is XP
+        if (broker !== 'XP') {
+            setFileType('pc');
+            // Limpa credenciais quando muda para BTG ou nenhum
+            setDividendsEmail('');
+            setDividendsPassword('');
+        }
+    }, [broker]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -103,55 +117,45 @@ const AddData = ({ setRefresh }) => {
     };
 
     const handleFileUpload = async () => {
-        if (!selectedFile) {
-            alert('Please select a file first.');
-            return;
-        }
-        if (!dividendsEmail) {
-            alert('Please enter your email.');
-            return;
-        }
-        if (!dividendsPassword) {
-            alert('Please enter your password.');
-            return;
+        if (!selectedFile) { alert('Please select a file first.'); return; }
+        if (!broker) { alert('Selecione o broker.'); return; }
+        // Fluxo XP exige email e senha + login
+        if (broker === 'XP') {
+            if (!dividendsEmail) { alert('Please enter your email.'); return; }
+            if (!dividendsPassword) { alert('Please enter your password.'); return; }
         }
         setIsUploadingFile(true);
-        // Hash da senha antes de enviar para loginUser
-        const hashedPassword = await hashPassword(dividendsPassword);
-        let loginOk = false;
+
+        let result;
         try {
-            await loginUser({ email: dividendsEmail, password: hashedPassword });
-            loginOk = true;
-        } catch (error) {
-            // Não propague o erro, apenas mostre alerta
-            setIsUploadingFile(false);
-            alert('Email ou senha incorretos.');
-            return;
-        }
-        if (!loginOk) return;
-        try {
-            const result = await readFile(selectedFile, fileType, dividendsPassword);
-            setRefresh(prevRefresh => prevRefresh + 1);
+            if (broker === 'BTG') {
+                // Sem login nem criptografia local para BTG
+                result = await saveBtgDividends(selectedFile);
+            } else {
+                // XP: autentica + criptografa
+                const hashedPassword = await hashPassword(dividendsPassword);
+                let loginOk = false;
+                try { await loginUser({ email: dividendsEmail, password: hashedPassword }); loginOk = true; } catch (e) { setIsUploadingFile(false); alert('Email ou senha incorretos.'); return; }
+                if (!loginOk) { setIsUploadingFile(false); return; }
+                result = await readFile(selectedFile, fileType, dividendsPassword);
+            }
+            setRefresh(prev => prev + 1);
             setIsAddingDividends(false);
             setFileName('Select a file');
             setSelectedFile(null);
             setDividendsPassword('');
             setDividendsEmail('');
-            console.log('result', result.message, 'duplicated: ', result.duplicated, 'inserted: ', result.inserted);
-            let msg = '';
-            if (result && typeof result === 'object') {
-                msg = `${result.message ? result.message + '\n' : ''}` +
-                    (result.duplicated !== undefined ? `Duplicated: ${result.duplicated}\n` : '') +
-                    (result.inserted !== undefined ? `Inserted: ${result.inserted}` : '');
-            } else {
-                msg = String(result);
-            }
-            alert(msg);
-            setIsUploadingFile(false);
+            const msg = (result && typeof result === 'object')
+                ? `${result.message ? result.message + '\n' : ''}` +
+                  (result.duplicated !== undefined ? `Duplicated: ${result.duplicated}\n` : '') +
+                  (result.inserted !== undefined ? `Inserted: ${result.inserted}` : '')
+                : String(result || 'Operação concluída');
+            alert(msg || 'Operação concluída');
         } catch (error) {
-            setIsUploadingFile(false);
             console.error('Error uploading file:', error);
             alert('Failed to upload and process the file.');
+        } finally {
+            setIsUploadingFile(false);
         }
     };
 
@@ -289,89 +293,94 @@ const AddData = ({ setRefresh }) => {
             }
 
 
-            {isAddingDividends ? (!isUploadingFile ?
+            {isAddingDividends ? (!isUploadingFile ? (
                 <div className="file-upload-container">
+                    {/* ...existing close button ... */}
                     <div className="file-upload-closebutton">
-                        <CloseIcon className='close-card-icon' onClick={() => {
-                            setIsAddingDividends(false)
-                            setSelectedFile(null)
-                            setFileName('Select a file')
-                            setDividendsPassword('')
-                        }} />
+                        <CloseIcon className='close-card-icon' onClick={() => { setIsAddingDividends(false); setSelectedFile(null); setFileName('Select a file'); setDividendsPassword(''); setDividendsEmail(''); }} />
                     </div>
                     <div style={{ marginBottom: 12 }}>
-                        <label htmlFor="file-type-select" style={{ marginRight: 8 }}>File type:</label>
-                        <select
-                            id="file-type-select"
-                            value={fileType}
-                            onChange={e => setFileType(e.target.value)}
-                            style={{ padding: 4 }}
-                        >
-                            <option value="pc">PC</option>
-                            <option value="mobile">Mobile</option>
+                        <label htmlFor="broker-select" style={{ marginRight: 8 }}>Broker:</label>
+                        <select id="broker-select" value={broker} onChange={e => setBroker(e.target.value)} style={{ padding: 4 }}>
+                            <option value="" disabled>Select</option>
+                            <option value="XP">XP</option>
+                            <option value="BTG">BTG</option>
                         </select>
                     </div>
+                    {broker === 'XP' && (
+                        <div style={{ marginBottom: 12 }}>
+                            <label htmlFor="file-type-select" style={{ marginRight: 8 }}>File type:</label>
+                            <select id="file-type-select" value={fileType} onChange={e => setFileType(e.target.value)} style={{ padding: 4 }}>
+                                <option value="pc">PC</option>
+                                <option value="mobile">Mobile</option>
+                            </select>
+                        </div>
+                    )}
                     <label htmlFor="file-upload" className="file-upload-label">
                         {fileName}
                     </label>
                     <input
                         type="file"
                         id="file-upload"
-                        accept=".xlsx, .xls"
+                        accept={broker === 'BTG' ? 'application/pdf,.pdf' : '.xlsx, .xls'}
                         onChange={handleFileChange}
                         className="file-upload-input"
+                        disabled={!broker}
                     />
-                    <input
-                        type="email"
-                        placeholder="Seu email"
-                        value={dividendsEmail}
-                        onChange={e => setDividendsEmail(e.target.value)}
-                        className="file-upload-password-input"
-                        autoComplete="username"
-                    />
-                    <div style={{ position: 'relative', width: '100%' }}>
-                        <input
-                            type={showDividendsPassword ? 'text' : 'password'}
-                            placeholder="Sua senha para criptografar"
-                            value={dividendsPassword}
-                            onChange={e => setDividendsPassword(e.target.value)}
-                            className="file-upload-password-input"
-                            autoComplete="current-password"
-                        />
-                        <button
-                            type="button"
-                            style={{
-                                position: 'absolute',
-                                right: 8,
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                padding: 0
-                            }}
-                            onClick={() => setShowDividendsPassword(v => !v)}
-                            tabIndex={-1}
-                            aria-label={showDividendsPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                        >
-                            {showDividendsPassword ? '🙈' : '👁️'}
-                        </button>
-                    </div>
+                    {broker === 'XP' && (
+                        <>
+                            <input
+                                type="email"
+                                placeholder="Seu email"
+                                value={dividendsEmail}
+                                onChange={e => setDividendsEmail(e.target.value)}
+                                className="file-upload-password-input"
+                                autoComplete="username"
+                            />
+                            <div style={{ position: 'relative', width: '100%' }}>
+                                <input
+                                    type={showDividendsPassword ? 'text' : 'password'}
+                                    placeholder="Sua senha para criptografar"
+                                    value={dividendsPassword}
+                                    onChange={e => setDividendsPassword(e.target.value)}
+                                    className="file-upload-password-input"
+                                    autoComplete="current-password"
+                                />
+                                <button
+                                    type="button"
+                                    style={{
+                                        position: 'absolute',
+                                        right: 8,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: 0
+                                    }}
+                                    onClick={() => setShowDividendsPassword(v => !v)}
+                                    tabIndex={-1}
+                                    aria-label={showDividendsPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                                >
+                                    {showDividendsPassword ? '🙈' : '👁️'}
+                                </button>
+                            </div>
+                        </>
+                    )}
                     <button
                         className="upload-file-button"
                         onClick={handleFileUpload}
-                        disabled={!selectedFile}
+                        disabled={!selectedFile || !broker || (broker === 'XP' && (!dividendsEmail || !dividendsPassword))}
                     >
                         Upload File
                     </button>
                 </div>
-                : (<div className="loader-container">
-                    <div className="loader-message">Encrypting your data...</div>
+            ) : (
+                <div className="loader-container">
+                    <div className="loader-message">{broker === 'BTG' ? 'Processing PDF...' : 'Encrypting your data...'}</div>
                     <div className="loader"></div>
-                </div>)
-            ) : null
-            }
-
+                </div>
+            )) : null}
         </div>
     );
 };

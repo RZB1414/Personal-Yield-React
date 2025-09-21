@@ -1,11 +1,13 @@
 import './Stocks.css';
 import { useState, useEffect, useRef } from 'react';
+import { formatCurrency, formatPercent } from '../../utils/format';
 import { searchStocks, stockData, addStock, updateStock, deleteStock } from '../../services/stocks';
 import { stocks, updated, dividends } from '../Connect';
 import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
+import HoldingsHistory from '../HoldingsHistory';
 
 const Stocks = ({ fetchingAgain, setRefresh }) => {
 
@@ -284,7 +286,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                     ref={searchInputRef}
                                 />
                                 <button className='search-input-button' onClick={handleSearch}>Search</button>
-                                <CloseIcon className='close-search-icon' onClick={() => {
+                                <CloseIcon className='close-search-stock-icon' onClick={() => {
                                     setSearchStock(false)
                                     setShowingStock(false)
                                     setResults([])
@@ -320,8 +322,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                 <div className="stock-data">
                                     <div className='stock-data-symbol-price'>
                                         <h2 className='stock-data-symbol'>{stockClicked.symbol.replace('.SA', '')}</h2>
-                                        <h3 className='stock-data-price'>{stockClicked.currency === 'BRL' ? 'R$' : stockClicked.currency === 'USD' ? '$' : ''}
-                                            {stockClicked.currentPrice}
+                                        <h3 className='stock-data-price'>
+                                            {formatCurrency(stockClicked.currentPrice, stockClicked.currency || 'BRL')}
                                         </h3>
                                     </div>
 
@@ -335,8 +337,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                     </div>
 
                     {stocksList.filter(stock => stock.currency === 'BRL').length > 0 ?
-                            <h2 className='stocks-list-title-BRL'>BRL Stocks</h2>
-                            : null
+                        <h2 className='stocks-list-title-BRL'>BRL Stocks</h2>
+                        : null
                     }
 
                     <div className='stocks-list-container'>
@@ -396,38 +398,35 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                     <tr key={index}>
                                                         <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
                                                         <td>
-                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                            {stock.currentPrice.toFixed(2)}
+                                                            {formatCurrency(stock.currentPrice, stock.currency)}
                                                         </td>
 
-                                                        <td>{Number(stock.averagePrice).toFixed(2)}</td>
+                                                        <td>{formatCurrency(Number(stock.averagePrice), stock.currency).replace(/^R\$ |^\$ /,'')}</td>
 
-                                                        <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
-                                                            {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) * 100).toFixed(2)}%` : null}
+                                                        <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'var(--chart-price-line)' : 'red' }}>
+                                                            {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
                                                         </td>
 
-                                                        <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                        <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
                                                             {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
-                                                                ? `${Number(percentageDifference).toFixed(2)}%`
+                                                                ? formatPercent(Number(percentageDifference))
                                                                 : null}
                                                         </td>
 
-                                                        <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
+                                                        <td style={{ color: isPositiveWithDividends ? 'var(--chart-price-line)' : 'red' }}>
                                                             {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
-                                                                ? `${Number(totalPercentageDifference).toFixed(2)}%`
+                                                                ? formatPercent(Number(totalPercentageDifference))
                                                                 : null}
                                                         </td>
                                                         <td>
-                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                            {totalValue.toFixed(2)}
+                                                            {formatCurrency(totalValue, stock.currency)}
                                                         </td>
 
-                                                        <td style={{ color: isPositive ? 'green' : 'red' }}>
-                                                            {valorizacaoBRL.toFixed(2)}
+                                                        <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
+                                                            {formatCurrency(valorizacaoBRL, 'BRL')}
                                                         </td>
                                                         <td>
-                                                            {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                            {dividends.toFixed(2)}
+                                                            {formatCurrency(dividends, stock.currency)}
                                                         </td>
                                                         <td>{stock.stocksQuantity}</td>
                                                     </tr>
@@ -440,48 +439,48 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                             <td></td>
                                             <td>
                                                 <strong>
-                                                    {updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
-                                                        .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
+                                                    {formatCurrency(updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL')
+                                                        .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0), 'BRL').replace('R$ ','')}
                                                 </strong>
                                             </td>
-                                            <td style={{ color: carteiraValorizacaoDia >= 0 ? 'green' : 'red' }}>
+                                            <td style={{ color: carteiraValorizacaoDia >= 0 ? 'var(--chart-price-line)' : 'red' }}>
                                                 <strong>
-                                                    {(Number(carteiraValorizacaoDia)).toFixed(2)}%
+                                                    {formatPercent(Number(carteiraValorizacaoDia))}
                                                 </strong>
                                             </td>
 
                                             <td>
                                                 <strong>
-                                                    {percentualValorizacaoBRL.toFixed(2)}%
+                                                    {formatPercent(percentualValorizacaoBRL)}
                                                 </strong>
                                             </td>
                                             <td>
                                                 <strong>
-                                                    {totalReturnPercent.toFixed(2)}%
+                                                    {formatPercent(totalReturnPercent)}
                                                 </strong>
                                             </td>
                                             <td>
                                                 <strong>
-                                                    R${updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
-                                                        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
+                                                    {formatCurrency(updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL')
+                                                        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0), 'BRL')}
                                                 </strong>
                                             </td>
                                             <td>
                                                 <strong>
-                                                    {valorizacaoTotalBRL.toFixed(2)}
+                                                    {formatCurrency(valorizacaoTotalBRL, 'BRL')}
                                                 </strong>
 
                                             </td>
                                             <td>
                                                 <strong>
-                                                    R${updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL') // Filtra apenas ações em BRL
+                                                    {formatCurrency(updatedStocksList
+                                                        .filter(stock => stock.currency === 'BRL')
                                                         .reduce((acc, stock) => {
-                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
+                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0;
                                                             return acc + dividends;
-                                                        }, 0).toFixed(2)}
+                                                        }, 0), 'BRL')}
                                                 </strong>
                                             </td>
                                             <td></td>
@@ -557,39 +556,31 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                         <tr key={index}>
                                                             <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
                                                             <td>
-                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                                {stock.currentPrice.toFixed(2)}
+                                                                {formatCurrency(stock.currentPrice, stock.currency)}
                                                             </td>
-                                                            <td>{Number(stock.averagePrice).toFixed(2)}</td>
+                                                            <td>{formatCurrency(Number(stock.averagePrice), stock.currency).replace(/^R\$ |^\$ /,'')}</td>
 
-                                                            <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'green' : 'red' }}>
-                                                                {stock.dayPriceChangePercent ? `${(Number(stock.dayPriceChangePercent) *
-                                                                    100).toFixed(2)}%` : null}
+                                                            <td style={{ color: Number(stock.dayPriceChangePercent) > 0 ? 'var(--chart-price-line)' : 'red' }}>
+                                                                {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
                                                             </td>
 
-                                                            <td style={{ color: isPositive ? 'green' : 'red' }}>
+                                                            <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
                                                                 {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
-                                                                    ? `${Number(percentageDifference).toFixed(2)}%`
+                                                                    ? formatPercent(Number(percentageDifference))
                                                                     : null}
                                                             </td>
 
-                                                            <td style={{ color: isPositiveWithDividends ? 'green' : 'red' }}>
+                                                            <td style={{ color: isPositiveWithDividends ? 'var(--chart-price-line)' : 'red' }}>
                                                                 {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
-                                                                    ? `${Number(totalPercentageDifference).toFixed(2)}%`
+                                                                    ? formatPercent(Number(totalPercentageDifference))
                                                                     : null}
                                                             </td>
-                                                            <td>
-                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                                {totalValue.toFixed(2)}
-                                                            </td>
+                                                            <td>{formatCurrency(totalValue, stock.currency)}</td>
 
-                                                            <td style={{ color: isPositive ? 'green' : 'red' }}>
-                                                                {valorizacaoUSD.toFixed(2)}
+                                                            <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
+                                                                {formatCurrency(valorizacaoUSD, 'USD')}
                                                             </td>
-                                                            <td>
-                                                                {stock.currency === 'BRL' ? 'R$' : stock.currency === 'USD' ? '$' : ''}
-                                                                {dividends.toFixed(2)}
-                                                            </td>
+                                                            <td>{formatCurrency(dividends, stock.currency)}</td>
                                                             <td>{Number(stock.stocksQuantity)}</td>
                                                         </tr>
                                                     );
@@ -601,21 +592,21 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 <td></td>
                                                 <td>
                                                     <strong>
-                                                        {updatedStocksList
-                                                            .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
-                                                            .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0).toFixed(2)}
+                                                        {formatCurrency(updatedStocksList
+                                                            .filter(stock => stock.currency === 'USD')
+                                                            .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0), 'USD').replace('$ ','')}
                                                     </strong>
                                                 </td>
 
-                                                <td style={{ color: carteiraValorizacaoDiaUSD >= 0 ? 'green' : 'red' }}>
+                                                <td style={{ color: carteiraValorizacaoDiaUSD >= 0 ? 'var(--chart-price-line)' : 'red' }}>
                                                     <strong>
-                                                        {(Number(carteiraValorizacaoDiaUSD)).toFixed(2)}%
+                                                        {formatPercent(Number(carteiraValorizacaoDiaUSD))}
                                                     </strong>
                                                 </td>
 
                                                 <td>
                                                     <strong>
-                                                        {percentualValorizacaoUSD.toFixed(2)}%
+                                                        {formatPercent(percentualValorizacaoUSD)}
                                                     </strong>
                                                 </td>
                                                 <td>
@@ -623,14 +614,14 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 </td>
                                                 <td>
                                                     <strong>
-                                                        ${updatedStocksList
-                                                            .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
-                                                            .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0).toFixed(2)}
+                                                        {formatCurrency(updatedStocksList
+                                                            .filter(stock => stock.currency === 'USD')
+                                                            .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0), 'USD')}
                                                     </strong>
                                                 </td>
                                                 <td>
                                                     <strong>
-                                                        {valorizacaoTotalUSD.toFixed(2)}
+                                                        {formatCurrency(valorizacaoTotalUSD, 'USD')}
                                                     </strong>
                                                 </td>
                                                 <td></td>
@@ -640,6 +631,13 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                     </table>
                                 </div>
                             ) : null}
+                        </div>
+
+                        <div style={{ marginTop: '40px' }}>
+                            <HoldingsHistory
+                                userId={typeof window !== 'undefined' ? sessionStorage.getItem('userId') : null}
+                                symbol={selectedStock ? selectedStock.symbol : undefined}
+                            />
                         </div>
 
                         <h2 className='footer'>Yield Management</h2>

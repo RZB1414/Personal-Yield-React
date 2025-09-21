@@ -1,17 +1,18 @@
 .add-data-container {
     margin: 0 auto;
     padding: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-text);
 }
 
 .add-data-container h2 {
     text-align: left;
     margin-bottom: 10px;
     font-size: 24px;
-    color: #333;
+    color: var(--color-text);
 }
 
 .form-group {
@@ -24,25 +25,27 @@
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #555;
+    color: var(--color-text-secondary);
 }
 
 .form-group input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     font-size: 16px;
-    background-color: #fff;
+    background-color: var(--color-surface-alt);
+    color: var(--color-text);
     transition: border-color 0.3s ease;
     box-sizing: border-box;
 }
+.form-group input:focus { border-color: var(--color-primary); }
 
 .add-transaction-button {
     width: 100%;
     padding: 12px;
-    background-color: #007bff;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -50,6 +53,7 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+.add-transaction-button:hover { background-color: var(--color-primary-hover); }
 
 .close-card-icon {
     width: 20px;
@@ -69,8 +73,8 @@
     box-sizing: border-box;
     width: 60%;
     padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
@@ -78,6 +82,7 @@
     transition: background-color 0.3s ease;
     margin-bottom: 10px;
 }
+.file-upload-label:hover { background-color: var(--color-primary-hover); }
 
 .file-upload-label:hover {
     background-color: #0056b3;
@@ -90,9 +95,9 @@
 .upload-file-button {
     box-sizing: border-box;
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: var(--color-primary);
     width: 60%;
-    color: white;
+    color: var(--color-text-inverse);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -100,13 +105,14 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+.upload-file-button:hover { background-color: var(--color-primary-hover); }
 
 .upload-file-button:hover {
     background-color: #0056b3;
 }
 
 .upload-file-button:disabled {
-    background-color: #ccc;
+    background-color: var(--color-border);
     cursor: not-allowed;
 }
 
@@ -119,10 +125,12 @@
     padding: 10px;
     margin-top: 10px;
     margin-bottom: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     font-size: 16px;
     box-sizing: border-box;
+    background: var(--color-surface-alt);
+    color: var(--color-text);
 }
 
 .loader-container {
@@ -134,7 +142,7 @@
 
 .loader-message {
     font-size: 20px;
-    color: #555;
+    color: var(--color-text-secondary);
     margin-bottom: 10px;
     text-align: center;
 }

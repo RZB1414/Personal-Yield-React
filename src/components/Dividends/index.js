@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { dividends } from '../Connect'
 import { btgDividends } from '../Connect'
 import { ReactComponent as BrokerIcon } from '../../assets/icons/broker-icon.svg'
+import { formatBRL } from '../../utils/format'
 
 const Dividends = ({ fetchingAgain }) => {
 
@@ -277,7 +278,7 @@ const Dividends = ({ fetchingAgain }) => {
                                 <option value="">---</option>
                                 {getAvailableMonths().map(month => (
                                     <option key={month} value={month}>
-                                        {new Date(0, month).toLocaleString('en-US', { month: 'long' })}
+                                        {new Date(0, month).toLocaleString('en-US', { month: 'short' })}
                                     </option>
                                 ))}
                             </select>
@@ -306,9 +307,9 @@ const Dividends = ({ fetchingAgain }) => {
 
                     {/* Soma total */}
                     <h3 className='dividends-total'>
-                        Total: R$ {showingDetailed
-                            ? detailedDividends.reduce((sum, dividend) => sum + dividend.valor, 0).toFixed(2)
-                            : Object.values(groupedDividends).reduce((sum, total) => sum + total, 0).toFixed(2)}
+                        Total: {formatBRL(showingDetailed
+                            ? detailedDividends.reduce((sum, dividend) => sum + dividend.valor, 0)
+                            : Object.values(groupedDividends).reduce((sum, total) => sum + total, 0))}
                     </h3>
 
                     {showingDetailed ? (
@@ -318,7 +319,7 @@ const Dividends = ({ fetchingAgain }) => {
                                     <li className='dividends-list-item' key={index}>
                                         <p className='dividends-list-item-liquidacao'>{dividend.liquidacao}</p>
                                         <p className='dividends-list-item-ticker'>{dividend.ticker}</p>
-                                        <p className='dividends-list-item-valor'>{dividend.valor.toFixed(2)}</p>
+                                        <p className='dividends-list-item-valor'>{formatBRL(dividend.valor, { prefix: '' })}</p>
                                     </li>
                                 ))}
                             </ul>
@@ -334,7 +335,7 @@ const Dividends = ({ fetchingAgain }) => {
                                     .map(([ticker, total]) => (
                                         <li className='dividends-list-item' key={ticker}>
                                             <p className='dividends-simplelist-ticker'>{ticker}</p>
-                                            <p className='dividends-simplelist-valor'>R$ {total.toFixed(2)}</p>
+                                            <p className='dividends-simplelist-valor'>{formatBRL(total)}</p>
                                         </li>
                                     ))}
                             </ul>

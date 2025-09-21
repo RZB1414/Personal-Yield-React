@@ -236,7 +236,6 @@ export {
 // Retorna 2 arrays separados pelos tipos de lançamento solicitados
 // 1) JUROS S / CAPITAL, COMPRA, RECEBIMENTO DIVIDENDOS, RENDIMENTO, RESTITUIÇÃO DE CAPITAL
 // 2) VENDA, COMPRA
-// Obs: COMPRA aparece em ambos os grupos (mantido em ambos conforme pedido)
 function splitBtgLancamentos(registros = []) {
   const grupo1Set = new Set([
     'JUROS S / CAPITAL',

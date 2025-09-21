@@ -10,39 +10,46 @@ import { addTotalValue, deleteTotalValue } from '../../services/totalValues';
 
 // Lista das principais moedas do mundo
 const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'BRL', name: 'Brazilian Real' },
-  { code: 'GBP', name: 'British Pound' },
-  { code: 'JPY', name: 'Japanese Yen' },
-  { code: 'CHF', name: 'Swiss Franc' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'AUD', name: 'Australian Dollar' },
-  { code: 'CNY', name: 'Chinese Yuan' },
-  { code: 'INR', name: 'Indian Rupee' },
-  { code: 'RUB', name: 'Russian Ruble' },
-  { code: 'ARS', name: 'Argentine Peso' },
-  { code: 'MXN', name: 'Mexican Peso' },
-  { code: 'ZAR', name: 'South African Rand' },
-  { code: 'TRY', name: 'Turkish Lira' },
-  { code: 'KRW', name: 'South Korean Won' },
-  { code: 'HKD', name: 'Hong Kong Dollar' },
-  { code: 'SGD', name: 'Singapore Dollar' },
-  { code: 'SEK', name: 'Swedish Krona' },
-  { code: 'NOK', name: 'Norwegian Krone' },
-  { code: 'NZD', name: 'New Zealand Dollar' },
-  { code: 'PLN', name: 'Polish Zloty' },
-  { code: 'DKK', name: 'Danish Krone' },
-  { code: 'CLP', name: 'Chilean Peso' },
-  { code: 'COP', name: 'Colombian Peso' },
-  { code: 'IDR', name: 'Indonesian Rupiah' },
-  { code: 'THB', name: 'Thai Baht' },
-  { code: 'EGP', name: 'Egyptian Pound' },
-  { code: 'SAR', name: 'Saudi Riyal' },
-  { code: 'AED', name: 'UAE Dirham' },
+    { code: 'USD', name: 'US Dollar' },
+    { code: 'EUR', name: 'Euro' },
+    { code: 'BRL', name: 'Brazilian Real' },
+    { code: 'GBP', name: 'British Pound' },
+    { code: 'JPY', name: 'Japanese Yen' },
+    { code: 'CHF', name: 'Swiss Franc' },
+    { code: 'CAD', name: 'Canadian Dollar' },
+    { code: 'AUD', name: 'Australian Dollar' },
+    { code: 'CNY', name: 'Chinese Yuan' },
+    { code: 'INR', name: 'Indian Rupee' },
+    { code: 'RUB', name: 'Russian Ruble' },
+    { code: 'ARS', name: 'Argentine Peso' },
+    { code: 'MXN', name: 'Mexican Peso' },
+    { code: 'ZAR', name: 'South African Rand' },
+    { code: 'TRY', name: 'Turkish Lira' },
+    { code: 'KRW', name: 'South Korean Won' },
+    { code: 'HKD', name: 'Hong Kong Dollar' },
+    { code: 'SGD', name: 'Singapore Dollar' },
+    { code: 'SEK', name: 'Swedish Krona' },
+    { code: 'NOK', name: 'Norwegian Krone' },
+    { code: 'NZD', name: 'New Zealand Dollar' },
+    { code: 'PLN', name: 'Polish Zloty' },
+    { code: 'DKK', name: 'Danish Krone' },
+    { code: 'CLP', name: 'Chilean Peso' },
+    { code: 'COP', name: 'Colombian Peso' },
+    { code: 'IDR', name: 'Indonesian Rupiah' },
+    { code: 'THB', name: 'Thai Baht' },
+    { code: 'EGP', name: 'Egyptian Pound' },
+    { code: 'SAR', name: 'Saudi Riyal' },
+    { code: 'AED', name: 'UAE Dirham' },
 ];
 
 const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) => {
+    // Formata número no padrão brasileiro: milhar com ponto e decimais com vírgula
+    const formatNumber = (val) => {
+        if (val === null || val === undefined || val === '') return '--';
+        const num = Number(val);
+        if (isNaN(num)) return '--';
+        return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
     const [selectedDate, setSelectedDate] = useState('');
     const [currencySearch, setCurrencySearch] = useState('');
     const filteredCurrencies = CURRENCIES.filter(currency =>
@@ -71,8 +78,8 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     useEffect(() => {
         setSelectedYear(new Date().getFullYear());
         setBrokers(brokersData || []);
-        setTotalValues(totalValuesData);        
-        
+        setTotalValues(totalValuesData);
+
     }, [brokersData, totalValuesData, fetchingAgain])
 
     const months = [
@@ -81,7 +88,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
     ];
 
     const availableYears = [...new Set(totalValues.map(value => new Date(value.date).getFullYear()))];
-    
+
 
     const getBrokerMonthlyTotals = (broker, monthIndex, year = selectedYear) => {
         const monthlyValue = totalValues.find(value => {
@@ -354,168 +361,174 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
         <>
             {isAddingTotalValue ?
                 <div className='broker-add-total-container'>
-                <div className='broker-container'>
-                    <h2 className='broker-tittle'>Brokers</h2>
-                    {isAddingBroker ? null :
-                        <CloseIcon className='broker-close-icon' onClick={() => {
-                            setIsAddingTotalValue(false);
-                            setIsAddingBroker(false);
-                            setSelectedBroker(null);
-                            setAmountBRL('');
-                            setAmountUSD('');
-                            setDollarRate(null);
-                            setSelectedDate('');
-                        }} />
-                    }
-                    
-                    {isAddingBroker ?
-                        <div className='broker-add-container'>
-                            <CloseIcon className='broker-close-icon' 
-                            onClick={() => {
-                                setIsAddingBroker(false) 
-                                setCurrencySearch('')}} 
-                                />
-                            <input
-                                className='broker-input'
-                                type="text"
-                                value={newBrokerName}
-                                onChange={(e) => setNewBrokerName(e.target.value)}
-                                placeholder="Broker Name"
-                            />
-                            {/* Autocomplete de moeda */}
-                            <div className="currency-autocomplete-wrapper">
-                                <input
-                                    className='currency-autocomplete-input'
-                                    type="text"
-                                    value={currencySearch || ''}
-                                    onChange={e => {
-                                        setCurrencySearch(e.target.value);
-                                        setNewBrokerCurrency(e.target.value);
-                                        setIsSearchingCurrency(true)
-                                    }}
-                                    placeholder="Currency"
-                                    autoComplete="off"
-                                />
-                                {isSearchingCurrency ?
-                                (currencySearch && filteredCurrencies.length > 0 && (
-                                    <ul className="currency-autocomplete-list">
-                                        {filteredCurrencies.map((currency, idx) => (
-                                            <li
-                                                key={idx}
-                                                className="currency-autocomplete-item"
-                                                onClick={() => {
-                                                    setNewBrokerCurrency(currency.code);
-                                                    setCurrencySearch(currency.code);
-                                                    setIsSearchingCurrency(false);
-                                                }}
-                                            >
-                                                {currency.code} - {currency.name}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ))
-                                : null
-                            }
-                                
+                    <div className='broker-container'>
+                        <h2 className='broker-tittle'>Brokers</h2>
+                        {isAddingBroker ? null :
+                            <CloseIcon className='broker-close-icon' onClick={() => {
+                                setIsAddingTotalValue(false);
+                                setIsAddingBroker(false);
+                                setSelectedBroker(null);
+                                setAmountBRL('');
+                                setAmountUSD('');
+                                setDollarRate(null);
+                                setSelectedDate('');
+                            }} />
+                        }
+
+                        {isAddingBroker ?
+                            <div className='broker-add-container'>
+                                <div className='broker-add-icon-container'>
+                                    <CloseIcon className='broker-close-icon'
+                                        onClick={() => {
+                                            setIsAddingBroker(false)
+                                            setCurrencySearch('')
+                                        }}
+                                    />
+                                </div>
+
+                                <div className='broker-add-form'>
+                                    <input
+                                        className='broker-input'
+                                        type="text"
+                                        value={newBrokerName}
+                                        onChange={(e) => setNewBrokerName(e.target.value)}
+                                        placeholder="Broker Name"
+                                    />
+                                    {/* Autocomplete de moeda */}
+                                    <div className="currency-autocomplete-wrapper">
+                                        <input
+                                            className='currency-autocomplete-input'
+                                            type="text"
+                                            value={currencySearch || ''}
+                                            onChange={e => {
+                                                setCurrencySearch(e.target.value);
+                                                setNewBrokerCurrency(e.target.value);
+                                                setIsSearchingCurrency(true)
+                                            }}
+                                            placeholder="Currency"
+                                            autoComplete="off"
+                                        />
+                                        {isSearchingCurrency ?
+                                            (currencySearch && filteredCurrencies.length > 0 && (
+                                                <ul className="currency-autocomplete-list">
+                                                    {filteredCurrencies.map((currency, idx) => (
+                                                        <li
+                                                            key={idx}
+                                                            className="currency-autocomplete-item"
+                                                            onClick={() => {
+                                                                setNewBrokerCurrency(currency.code);
+                                                                setCurrencySearch(currency.code);
+                                                                setIsSearchingCurrency(false);
+                                                            }}
+                                                        >
+                                                            {currency.code} - {currency.name}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ))
+                                            : null
+                                        }
+
+                                    </div>
+                                    <button className='broker-button' onClick={handleAddBroker}>Add Broker</button>
+                                </div>
                             </div>
-                            <button className='broker-button' onClick={handleAddBroker}>Add Broker</button>
-                        </div>
-                        : null
-                    }
-                    
-                    <div>
-                        <label className='broker-label' htmlFor="brokerSelect">Select a Broker:</label>
-                        <select
-                            className='broker-select-broker'
-                            id="brokerSelect"
-                            onChange={(e) => {
-                                if (e.target.value === "Add New Broker") {
-                                    setIsAddingBroker(true);
-                                    setSelectedBroker(null);
-                                    setNewBrokerName('');
-                                    setNewBrokerCurrency('');
-                                } else {
-                                    handleSelectBroker(e);
-                                    setIsAddingBroker(false);
-                                }
-                            }}
-                        >
-                            <option className='broker-option' value="">-- Select --</option>
-                            {brokers.map((broker, index) => (
-                                <option key={index} value={broker.broker}>
-                                    {broker.broker} ({broker.currency})
-                                </option>
-                            ))}
-                            <option className='broker-option' value="Add New Broker">Add New Broker</option>
-                        </select>
-                    </div>
-                    <form onSubmit={handleAddTotalValue} className='broker-form'>
-                        <div className='broker-date-container'>
-                            {selectedDate && (
-                                <span style={{ fontSize: '1em', color: '#444' }}>{selectedDate}</span>
-                            )}
-                            <DateIcon 
-                                className='broker-date-icon'                                 
-                                onClick={() => {
-                                    const dateInput = document.getElementById('dateInput');
-                                    if (dateInput) dateInput.showPicker();
-                                }}
-                            />
-                            
-                            <input
-                                id="dateInput"
-                                className='broker-input-data'
-                                type="date"
-                                style={{ display: 'none' }}
+                            : null
+                        }
+
+                        <div>
+                            <label className='broker-label' htmlFor="brokerSelect">Select a Broker:</label>
+                            <select
+                                className='broker-select-broker'
+                                id="brokerSelect"
                                 onChange={(e) => {
-                                    setSelectedDate(e.target.value);
-                                    fetchDollarRate(e.target.value);
+                                    if (e.target.value === "Add New Broker") {
+                                        setIsAddingBroker(true);
+                                        setSelectedBroker(null);
+                                        setNewBrokerName('');
+                                        setNewBrokerCurrency('');
+                                    } else {
+                                        handleSelectBroker(e);
+                                        setIsAddingBroker(false);
+                                    }
                                 }}
-                            />
+                            >
+                                <option className='broker-option' value="">-- Select --</option>
+                                {brokers.map((broker, index) => (
+                                    <option key={index} value={broker.broker}>
+                                        {broker.broker} ({broker.currency})
+                                    </option>
+                                ))}
+                                <option className='broker-option' value="Add New Broker">Add New Broker</option>
+                            </select>
                         </div>
-                        <div className='broker-amount-container'>
-                            <input
-                                className='broker-input-total'
-                                type="number"
-                                placeholder="Total Amount"
-                                value={amountUSD}
-                                onChange={e => {
-                                    setAmountUSD(e.target.value);
-                                    setLastChanged('USD');
-                                }}
-                            />
-                            {selectedBroker ?
-                                <p>USD</p>
-                                : null
-                            }
-                        </div>
+                        <form onSubmit={handleAddTotalValue} className='broker-form'>
+                            <div className='broker-date-container'>
+                                {selectedDate && (
+                                    <span style={{ fontSize: '1em', color: '#444' }}>{selectedDate}</span>
+                                )}
+                                <DateIcon
+                                    className='broker-date-icon'
+                                    onClick={() => {
+                                        const dateInput = document.getElementById('dateInput');
+                                        if (dateInput) dateInput.showPicker();
+                                    }}
+                                />
 
-                        {dollarRate && (
-                            <div style={{ color: '#3182ce' }}>
-                                USD/BRL: R$ {parseFloat(dollarRate).toFixed(4)}
+                                <input
+                                    id="dateInput"
+                                    className='broker-input-data'
+                                    type="date"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        fetchDollarRate(e.target.value);
+                                    }}
+                                />
                             </div>
-                        )}
+                            <div className='broker-amount-container'>
+                                <input
+                                    className='broker-input-total'
+                                    type="number"
+                                    placeholder="Total Amount"
+                                    value={amountUSD}
+                                    onChange={e => {
+                                        setAmountUSD(e.target.value);
+                                        setLastChanged('USD');
+                                    }}
+                                />
+                                {selectedBroker ?
+                                    <p>USD</p>
+                                    : null
+                                }
+                            </div>
 
-                        <div className='broker-amount-container'>
-                            <input
-                                className='broker-input-total'
-                                type="number"
-                                placeholder="Total Amount"
-                                value={amountBRL}
-                                onChange={e => {
-                                    setAmountBRL(e.target.value);
-                                    setLastChanged('BRL');
-                                }}
-                            />
-                            {selectedBroker ?
-                                <p>BRL</p>
-                                : null
-                            }
-                        </div>
-                        <button className='broker-button-value' type="submit">Add Total Value</button>
+                            {dollarRate && (
+                                <div style={{ color: '#3182ce' }}>
+                                    USD/BRL: R$ {parseFloat(dollarRate).toFixed(4)}
+                                </div>
+                            )}
 
-                    </form>
-                </div>
+                            <div className='broker-amount-container'>
+                                <input
+                                    className='broker-input-total'
+                                    type="number"
+                                    placeholder="Total Amount"
+                                    value={amountBRL}
+                                    onChange={e => {
+                                        setAmountBRL(e.target.value);
+                                        setLastChanged('BRL');
+                                    }}
+                                />
+                                {selectedBroker ?
+                                    <p>BRL</p>
+                                    : null
+                                }
+                            </div>
+                            <button className='broker-button-value' type="submit">Add Total Value</button>
+
+                        </form>
+                    </div>
                 </div>
                 : null
             }
@@ -544,7 +557,14 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
 
             {isSearchingTotalValue ?
                 <div className='total-value-search'>
-                    <div>
+                    <CloseIcon className='broker-close-icon' onClick={() => {
+                        setIsSearchingTotalValue(false)
+                        setSearchBroker('');
+                        setSearchMonth('');
+                    }
+                    }
+                    />
+                    <div className='total-value-search-filters'>
                         <label htmlFor="searchBroker">Broker:</label>
                         <select
                             id="searchBroker"
@@ -568,21 +588,22 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                             ))}
                         </select>
                     </div>
-                    <CloseIcon className='broker-close-icon' onClick={() => {
-                        setIsSearchingTotalValue(false)
-                        setSearchBroker('');
-                        setSearchMonth('');
-                    }
-                    }
-                    />
 
                     <div className='broker-search-results'>
                         {(searchBroker && searchMonth && filteredTotalValues.length > 0) ? (
                             <ul>
                                 {filteredTotalValues.map((value, index) => (
                                     <li key={index}>
-                                        <p>{value.broker.broker} - {months[Number(value.date.split('-')[1]) - 1]} - {Number(value.totalValueInUSD).toFixed(2)} USD / {Number(value.totalValueInBRL).toFixed(2)} BRL</p>
                                         <DeleteIcon className='broker-delete-icon' onClick={() => handleDeleteTotalValue(value)} />
+                                        <p className='broker-search-item'>
+                                            {value.broker.broker} - {months[Number(value.date.split('-')[1]) - 1]}
+                                        </p>
+                                        <p className='broker-search-amounts'>
+                                            {formatNumber(value.totalValueInUSD)} USD
+                                            <br />
+                                            {formatNumber(value.totalValueInBRL)} BRL
+                                        </p>
+                                        
                                     </li>
                                 ))}
                             </ul>
@@ -636,7 +657,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                                     : '#3182ce';
                                                 return (
                                                     <React.Fragment key={monthIndex}>
-                                                        <td>{totalUSD.toFixed(2)}</td>
+                                                        <td>{formatNumber(totalUSD)}</td>
                                                         <td style={{ fontSize: '0.95em', color: color }}>
                                                             {valorization && valorization.valorizationUSD !== null
                                                                 ? `${valorization.valorizationUSD.toFixed(2)}%`
@@ -656,7 +677,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                                     : '#3182ce';
                                                 return (
                                                     <React.Fragment key={monthIndex}>
-                                                        <td>{totalBRL.toFixed(2)}</td>
+                                                        <td>{formatNumber(totalBRL)}</td>
 
                                                         <td style={{ fontSize: '0.95em', color: color }}>
                                                             {valorization && valorization.valorizationBRL !== null
@@ -679,7 +700,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                         : '#3182ce';
                                     return (
                                         <React.Fragment key={monthIndex}>
-                                            <td>{totals.totalUSD.toFixed(2)}</td>
+                                            <td>{formatNumber(totals.totalUSD)}</td>
                                             <td style={{ fontSize: '0.95em', color }}>
                                                 {valorization !== null
                                                     ? `${valorization.toFixed(2)}%`
@@ -698,7 +719,7 @@ const Brokers = ({ brokersData, totalValuesData, setRefresh, fetchingAgain }) =>
                                         : '#3182ce';
                                     return (
                                         <React.Fragment key={monthIndex}>
-                                            <td>{totals.totalBRL.toFixed(2)}</td>
+                                            <td>{formatNumber(totals.totalBRL)}</td>
                                             <td style={{ fontSize: '0.95em', color }}>
                                                 {valorization !== null
                                                     ? `${valorization.toFixed(2)}%`

@@ -1,4 +1,5 @@
 import './Menu.css'
+import ThemeToggle from '../ThemeToggle';
 import { useNavigate } from "react-router-dom"
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 import { ReactComponent as LogoutIcon } from '../../assets/icons/logout.svg'
@@ -28,6 +29,7 @@ const Menu = ({setIsLoggedIn}) => {
              }}>
                 Logout
             </LogoutIcon>
+            <ThemeToggle />
         </div>
     )
 }
