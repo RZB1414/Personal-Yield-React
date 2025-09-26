@@ -12,7 +12,7 @@ import {
   CartesianGrid
 } from 'recharts';
 import { ReferenceLine } from 'recharts';
-import { formatPercent } from '../../utils/format';
+import { formatPercent, formatNumber } from '../../utils/format';
 
 /**
  * Snapshots chart
@@ -62,6 +62,22 @@ export default function Snapshots({ userId }) {
 
   const chartData = useMemo(() => {
     if (!symbol) return [];
+    const parseNumber = (value) => {
+      if (value === null || value === undefined) return NaN;
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : NaN;
+      }
+      if (typeof value === 'string') {
+        const normalized = value
+          .trim()
+          .replace(/\s+/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.');
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : NaN;
+      }
+      return NaN;
+    };
     // Aggregate across all assets
     if (symbol === 'ALL') {
       const byDate = new Map();
@@ -69,7 +85,7 @@ export default function Snapshots({ userId }) {
         if (d.currency !== currency) continue;
         if (!d.tradingDate) continue;
         const date = d.tradingDate.toISOString().slice(0, 10);
-        const pct = Number(d.dayChangePercent);
+        const pct = parseNumber(d.dayChangePercent);
         if (!Number.isFinite(pct)) continue;
         const prev = byDate.get(date) || { sum: 0, count: 0 };
         prev.sum += pct; // sum of daily % across symbols
@@ -78,10 +94,10 @@ export default function Snapshots({ userId }) {
       }
       return Array.from(byDate.entries())
         .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-        .map(([date, { sum }]) => ({
+        .map(([date, { sum, count }]) => ({
           date,
           closePrice: null,
-          dayChangePercent: sum
+          dayChangePercent: count > 0 ? sum / count : null
         }));
     }
     // Single symbol series
@@ -90,42 +106,78 @@ export default function Snapshots({ userId }) {
       .sort((a, b) => a.tradingDate - b.tradingDate)
       .map((d) => ({
         date: d.tradingDate.toISOString().slice(0, 10),
-        closePrice: Number(d.closePrice),
-        dayChangePercent: Number(d.dayChangePercent),
+        closePrice: (() => {
+          const value = parseNumber(d.closePrice);
+          return Number.isFinite(value) ? value : null;
+        })(),
+        dayChangePercent: (() => {
+          const value = parseNumber(d.dayChangePercent);
+          return Number.isFinite(value) ? value : null;
+        })(),
         currency: d.currency
       }));
   }, [items, symbol, currency]);
 
-  // Determine if there are negatives to adjust domain and show zero line
-  const hasNegative = useMemo(() => chartData.some(d => Number(d.dayChangePercent) < 0), [chartData]);
-  const yRightDomain = hasNegative ? ["dataMin-5", "dataMax+5"] : [0, "dataMax+5"];
-  const yLeftDomain = useMemo(() => (symbol !== 'ALL' ? [0, 'dataMax+5'] : undefined), [symbol]);
+  // Utility: compare floating numbers with tolerance
+  function approxEq(a, b, eps = 1e-6) {
+    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < eps;
+  }
 
-  // Build ticks only from existing data values (sampled to avoid clutter)
-  const uniqueSorted = (arr) => Array.from(new Set(arr.filter((v) => Number.isFinite(v)))).sort((a, b) => a - b);
-  const sampleTicks = (values, max = 8) => {
-    const n = values.length;
-    if (n <= max) return values;
-    const step = (n - 1) / (max - 1);
-    const picked = [];
-    for (let i = 0; i < max; i++) {
-      const idx = Math.round(i * step);
-      picked.push(values[idx]);
+  // Determine min/max for right axis (percent)
+  const rightMinMax = useMemo(() => {
+    const vals = chartData.map(d => Number(d.dayChangePercent)).filter(Number.isFinite);
+    if (vals.length === 0) return { min: 0, max: 0 };
+    return { min: Math.min(...vals), max: Math.max(...vals) };
+  }, [chartData]);
+  const yRightDomain = useMemo(() => {
+    const pad = 1; // small padding to avoid clipping
+    let minBound = Math.min(rightMinMax.min, 0) - pad;
+    let maxBound = Math.max(rightMinMax.max, 0) + pad;
+    if (approxEq(maxBound, minBound)) {
+      // ensure a visible span
+      maxBound = minBound + 2 * pad;
     }
-    return Array.from(new Set(picked));
-  };
+    return [minBound, maxBound];
+  }, [rightMinMax]);
+  const leftMinMax = useMemo(() => {
+    if (symbol === 'ALL') return { min: 0, max: 0 };
+    const vals = chartData.map(d => Number(d.closePrice)).filter(Number.isFinite);
+    if (vals.length === 0) return { min: 0, max: 0 };
+    return { min: Math.min(...vals), max: Math.max(...vals) };
+  }, [chartData, symbol]);
+  const yLeftDomain = useMemo(() => {
+    if (symbol === 'ALL') return undefined;
+    const pad = 1;
+    let minBound = leftMinMax.min - pad;
+    let maxBound = leftMinMax.max + pad;
+    if (approxEq(maxBound, minBound)) {
+      maxBound = minBound + 2 * pad;
+    }
+    return [minBound, maxBound];
+  }, [leftMinMax, symbol]);
+
+  // Build ticks: show only [min, 0, max]
+  const uniqueSorted = (arr) => Array.from(new Set(arr.filter((v) => Number.isFinite(v)))).sort((a, b) => a - b);
 
   const rightTicks = useMemo(() => {
-    const vals = uniqueSorted([...chartData.map((d) => Number(d.dayChangePercent)), 0]);
-    const sampled = sampleTicks(vals);
-    return sampled.includes(0) ? sampled : uniqueSorted([...sampled, 0]);
+    const vals = chartData.map((d) => Number(d.dayChangePercent)).filter(Number.isFinite);
+    if (vals.length === 0) return [0];
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    return uniqueSorted([min, 0, max]);
   }, [chartData]);
 
   const leftTicks = useMemo(() => {
     if (symbol === 'ALL') return undefined;
-    const vals = uniqueSorted([...chartData.map((d) => Number(d.closePrice)), 0]);
-    const sampled = sampleTicks(vals);
-    return sampled.includes(0) ? sampled : uniqueSorted([...sampled, 0]);
+    const vals = chartData.map((d) => Number(d.closePrice)).filter(Number.isFinite);
+    if (vals.length === 0) return undefined;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    // Include 0 only if the data crosses zero; otherwise just [min, max]
+    if (min < 0 && max > 0) {
+      return uniqueSorted([min, 0, max]);
+    }
+    return uniqueSorted([min, max]);
   }, [chartData, symbol]);
 
   // Reset selection when currency changes
@@ -133,6 +185,40 @@ export default function Snapshots({ userId }) {
     setSymbol('ALL');
     setClickedPoint(null);
   }, [currency]);
+
+  // Custom Y-axis ticks with color: white for >= 0, red for < 0
+
+  const LeftAxisTick = React.useCallback((props) => {
+    const { x, y, payload } = props;
+    const v = Number(payload?.value);
+    const color = Number.isFinite(v) && v < 0 ? '#ff4d4f' : '#ffffff';
+    const isMin = approxEq(v, leftMinMax.min);
+    const isMax = approxEq(v, leftMinMax.max);
+    const dy = isMax ? 8 : isMin ? -2 : 4;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={dy} dx={-4} textAnchor="end" fill={color}>
+          {Number.isFinite(v) ? formatNumber(v) : payload?.value}
+        </text>
+      </g>
+    );
+  }, [leftMinMax]);
+
+  const RightAxisTick = React.useCallback((props) => {
+    const { x, y, payload } = props;
+    const v = Number(payload?.value);
+    const color = Number.isFinite(v) && v < 0 ? '#ff4d4f' : '#ffffff';
+    const isMin = approxEq(v, rightMinMax.min);
+    const isMax = approxEq(v, rightMinMax.max);
+    const dy = isMax ? 8 : isMin ? -2 : 4;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text x={0} y={0} dy={dy} dx={4} textAnchor="start" fill={color}>
+          {formatPercent(v)}
+        </text>
+      </g>
+    );
+  }, [rightMinMax]);
 
   return (
     <div className="snapshots-wrapper">
@@ -167,7 +253,13 @@ export default function Snapshots({ userId }) {
             const date = typeof clickedPoint.date === 'string' && clickedPoint.date.length >= 10
               ? `${clickedPoint.date.slice(8, 10)}/${clickedPoint.date.slice(5, 7)}`
               : clickedPoint.date;
-            return `${date} — ${formatPercent(Number(clickedPoint.dayChangePercent))}`;
+            const v = Number(clickedPoint.dayChangePercent);
+            const color = Number.isFinite(v) && v < 0 ? '#ff4d4f' : '#ffffff';
+            return (
+              <>
+                {date} — <span style={{ color }}>{formatPercent(v)}</span>
+              </>
+            );
           })()}
         </div>
       )}
@@ -177,10 +269,10 @@ export default function Snapshots({ userId }) {
 
       {chartData.length > 0 && (
         <div className="chart-container">
-          <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={320}>
             <LineChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
+                  margin={{ top: 28, right: 30, left: 10, bottom: 28 }}
               onClick={(e) => {
                 if (e && e.activePayload && e.activePayload.length > 0) {
                   setClickedPoint(e.activePayload[0].payload);
@@ -196,39 +288,47 @@ export default function Snapshots({ userId }) {
                     : v
                 }
               />
-              <YAxis yAxisId="left" orientation="left" stroke="var(--chart-price-line)" domain={yLeftDomain} ticks={leftTicks} />
+              <YAxis yAxisId="left" orientation="left" stroke="var(--chart-price-line)" domain={yLeftDomain} ticks={leftTicks} tick={<LeftAxisTick />} />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 stroke="var(--chart-quantity-line)"
                 domain={yRightDomain}
                 ticks={rightTicks}
-                tickFormatter={(v) => formatPercent(Number(v))}
+                tick={<RightAxisTick />}
               />
               <Tooltip
+                wrapperStyle={{ marginTop: -84 }}
                 content={({ label, payload }) => {
                   if (!payload || payload.length === 0) return null;
                   const percentItem = payload.find(p => p.dataKey === 'dayChangePercent') || payload[0];
                   const dateLabel = typeof label === 'string' && label.length >= 10
                     ? `${label.slice(8, 10)}/${label.slice(5, 7)}`
                     : label;
+                  const v = Number(percentItem.value);
+                  const color = Number.isFinite(v) && v < 0 ? '#ff4d4f' : '#ffffff';
                   return (
                     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: 8, borderRadius: 6 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{dateLabel}</div>
-                      <div style={{ fontWeight: 600 }}>{formatPercent(Number(percentItem.value))}</div>
+                      <div style={{ fontWeight: 600, color }}>{formatPercent(v)}</div>
                     </div>
                   );
                 }}
               />
               <Legend />
-              {hasNegative && (
-                <ReferenceLine y={0} yAxisId="right" />
-              )}
-              {symbol !== 'ALL' && (
+              <ReferenceLine y={0} yAxisId="right" stroke="var(--color-border)" />
+              {symbol !== 'ALL' && leftMinMax.min < 0 && leftMinMax.max > 0 && (
                 <ReferenceLine y={0} yAxisId="left" stroke="var(--color-border)" />
               )}
               {symbol !== 'ALL' && (
-                <Line yAxisId="left" type="monotone" dataKey="closePrice" stroke="var(--chart-price-line)" name="Preço" dot={false} />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="closePrice"
+                  stroke="var(--chart-price-line)"
+                  name={`Preço (${currency})`}
+                  dot={false}
+                />
               )}
               <Line yAxisId="right" type="monotone" dataKey="dayChangePercent" stroke="var(--chart-quantity-line)" name="Variação %" dot={false} />
             </LineChart>

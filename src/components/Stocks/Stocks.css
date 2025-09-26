@@ -5,6 +5,7 @@
 
 .stocks-list-wrapper { display: flex; flex-direction: column; position: relative; width: 100%; }
 .stocks-list-title-USD { font-size: 24px; font-weight: 600; margin: 15px 0; text-align: center; color: var(--color-text); }
+.stocks-list-title-BRL{ font-size: 24px; font-weight: 600; margin: 15px 0; text-align: center; color: var(--color-text); }
 
 .search-container { display: flex; justify-content: center; align-items: center; margin: 20px 10px 0; width: 100%; gap: 8px; flex-wrap: wrap; }
 .close-search-stock-icon { width: 25px; height: 25px; margin-right: 10px; cursor: pointer; fill: var(--color-text-secondary); transition: fill .2s; }
@@ -36,7 +37,7 @@
 .stock-data-close-addIcon { display: flex; flex-direction: column; gap: 15px; }
 .stock-data-price { font-size: 20px; font-weight: 400; margin: 5px; }
 
-.footer { display: flex; justify-content: center; align-items: center; margin-top: 20px; padding: 10px; background: var(--color-surface-alt); border-radius: 6px; color: var(--color-text-secondary); }
+.footer { display: flex; justify-content: center; align-items: center; margin-top: 20px; padding: 10px; background: var(--color-surface-alt); color: var(--color-text-secondary); }
 
 /* Icons */
 .search-icon { width: 40px; height: 40px; margin-left: auto; margin-right: 10px; cursor: pointer; color: var(--color-text-secondary); transition: fill .2s; }

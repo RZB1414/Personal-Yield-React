@@ -42,7 +42,7 @@ h1, h2, h3, button, p, span {
     color: var(--color-text-inverse);
     border: 1px solid var(--color-primary);
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 8px 6px;
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;

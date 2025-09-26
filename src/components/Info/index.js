@@ -149,7 +149,7 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
 
                             {/* Linha 2: RENDIMENTO RENDA FIXA */}
                             <tr>
-                                <td className="sticky-column">Rendimento Renda Fixa</td>
+                                <td className="sticky-column">Renda Fixa</td>
                                 {Array.from({ length: 12 }, (_, i) => {
                                     const internal = new Date(0, i).toLocaleString('default', { month: 'long' });
                                     return (
@@ -173,7 +173,7 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
 
                             {/* Linha 4: CASHBACK CARTAO */}
                             <tr>
-                                <td className="sticky-column">Cashback Cartão</td>
+                                <td className="sticky-column">Cashback</td>
                                 {Array.from({ length: 12 }, (_, i) => {
                                     const internal = new Date(0, i).toLocaleString('default', { month: 'long' });
                                     return (
@@ -184,7 +184,7 @@ const Info = ({ filteredDividends, dividends, brokersData, totalValuesData, card
                             </tr>
                             {/* Linha 5: CREDIT CARDS */}
                             <tr>
-                                <td className="sticky-column">Cartões de Crédito</td>
+                                <td className="sticky-column">Credit Cards</td>
                                 {Array.from({ length: 12 }, (_, i) => {
                                     const internal = new Date(0, i).toLocaleString('default', { month: 'long' });
                                     const cardsOfMonth = cardValues.filter(card => new Date(card.date).getFullYear() === selectedYear && new Date(card.date).toLocaleString('default', { month: 'long' }) === internal);
