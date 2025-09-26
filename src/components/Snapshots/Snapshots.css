@@ -1,0 +1,57 @@
+.snapshots-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  color: var(--color-text);
+  margin-top: 20px;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  /* Limit touch panning inside chart area */
+  touch-action: pan-y pinch-zoom;
+}
+
+.snapshots-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.snapshots-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.snapshots-controls select {
+  margin-left: 8px;
+  padding: 6px 8px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.snap-status {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.snap-error {
+  color: var(--color-danger);
+  background: rgba(255,0,0,0.06);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Make chart container non-scroll-draggable on touch and prevent text selection while dragging */
+.chart-container {
+  touch-action: none; /* disables touch panning inside chart */
+  -ms-touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}

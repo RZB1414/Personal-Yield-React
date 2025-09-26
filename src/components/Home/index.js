@@ -2,43 +2,28 @@ import { useState } from 'react'
 import { LoginForm } from '../Connect'
 import './Home.css'
 import Logon from '../Logon'
-import bgImg from '../../assets/homeBackground.jpeg'
 
+// Página de autenticação unificada (Login / Sign Up)
 const Home = ({ onLogin }) => {
-
-    const [logonClicked, setLogonClicked] = useState(false)
-
-    const handleLogon = () => {
-        setLogonClicked(true)
-    }
-
-    const handleLogin = () => {
-        setLogonClicked(false);
-    }
+    const [isSignUp, setIsSignUp] = useState(false)
 
     return (
-        <div className="home-container" style={ {
-            backgroundImage: `url(${bgImg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-            } } >
-            <h1 className="home-title">Yield Management</h1>
-            {logonClicked ? (
-                <div className="home-intro">
-                <button className="home-button" onClick={handleLogin}>
-                    Login
-                </button>
-                <Logon />
-                </div>
-            ) : (
-                <div className="home-intro">
-                    <button className="home-button" onClick={handleLogon}>
-                        Logon
-                    </button>
+        <div className="auth-page">
+            <h1 className="app-brand">Yield Management</h1>
+            <div className="auth-card-wrapper">
+                {isSignUp ? (
+                    <Logon onCreate={() => setIsSignUp(false)} />
+                ) : (
                     <LoginForm onLogin={onLogin} />
-                </div>
-            )
-            }
+                )}
+            </div>
+            <div className="auth-toggle">
+                {isSignUp ? (
+                    <span>Já tem uma conta? <button className="link-button" onClick={() => setIsSignUp(false)}>Log In</button></span>
+                ) : (
+                    <span>Don't have an account? <button className="link-button" onClick={() => setIsSignUp(true)}>Sign Up</button></span>
+                )}
+            </div>
         </div>
     )
 }

@@ -7,7 +7,7 @@ import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
-import HoldingsHistory from '../HoldingsHistory';
+import Snapshots from '../Snapshots';
 
 const Stocks = ({ fetchingAgain, setRefresh }) => {
 
@@ -634,9 +634,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                         </div>
 
                         <div style={{ marginTop: '40px' }}>
-                            <HoldingsHistory
+                            <Snapshots
                                 userId={typeof window !== 'undefined' ? sessionStorage.getItem('userId') : null}
-                                symbol={selectedStock ? selectedStock.symbol : undefined}
                             />
                         </div>
 

@@ -4,6 +4,8 @@ import './Connect.css';
 import { getCurrentUser, loginUser } from '../../services/login'
 import { useState } from 'react';
 import { getBtgDividends } from "../../services/btgDividends";
+import emailIcon from '../../assets/icons/email-icon.svg';
+import lockIcon from '../../assets/icons/lock-icon.svg';
 
 let filteredDividends = [];
 let dividends = [];
@@ -53,9 +55,6 @@ const fetchDividendsStocks = async () => {
             )
 
             dividends = allDividends
-
-            console.log('Dividends:', dividends);
-            console.log('Filtered Dividends:', filteredDividends);
             
         }
 
@@ -63,8 +62,6 @@ const fetchDividendsStocks = async () => {
         if (btgResponse && Array.isArray(btgResponse.dividends) && (btgResponse.dividends.length || btgResponse.transactions.length) > 0) {
             btgDividends = btgResponse.dividends
             btgTransactions = btgResponse.transactions
-            console.log('CONNECT BTG Dividends:', btgDividends);
-            console.log('CONNECT BTG Transactions:', btgTransactions);
         } else {
             console.warn('No BTG dividends available');
             btgDividends = []
@@ -130,28 +127,45 @@ const LoginForm = ({ onLogin }) => {
     };
 
     return (
-        <form className="formLog" onSubmit={handleSubmit}>
-            <h2>Login</h2>
-            <input
-                className="inputLog"
-                name="email"
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={handleChange}
-                required
-            />
-            <input
-                className="inputLog"
-                name="password"
-                type="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={handleChange}
-                required
-            />
-            <button className="submitButton" type="submit">Entrar</button>
-            {message && <p>{message}</p>}
+        <form className="auth-form" onSubmit={handleSubmit}>
+            <h2 className="auth-title">Log In</h2>
+            <div className="field-group">
+                <div className="input-wrapper">
+                    <span className="input-icon" aria-hidden>
+                        <img src={emailIcon} alt="" width={20} height={20} loading="lazy" />
+                    </span>
+                    <input
+                        className="text-input"
+                        name="email"
+                        type="email"
+                        placeholder="Email"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+            </div>
+            <div className="field-group">
+                <div className="input-wrapper">
+                    <span className="input-icon" aria-hidden>
+                        <img src={lockIcon} alt="" width={20} height={20} loading="lazy" />
+                    </span>
+                    <input
+                        className="text-input"
+                        name="password"
+                        type="password"
+                        placeholder="Password"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+            </div>
+            <div className="form-extras">
+                <button type="button" className="forgot-link">Forgot Password?</button>
+            </div>
+            <button className="primary-button" type="submit">Log In</button>
+            {message && <p className="form-message">{message}</p>}
         </form>
     );
 };

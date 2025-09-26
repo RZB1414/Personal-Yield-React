@@ -33,6 +33,8 @@ export default function HoldingsHistory({ userId, symbol }) {
       setError(null);
       try {
         const result = await getHoldingsHistory(userId, symbol);
+        console.log('Holdings history result:', result);
+        
         if (result?.aviso) {
           setError(result.aviso);
           setData([]);

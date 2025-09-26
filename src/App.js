@@ -8,11 +8,11 @@ import Menu from './components/Menu';
 import AddData from './components/AddData';
 import { fetchDividendsStocks, filteredDividends, dividends } from './components/Connect';
 import { useEffect, useState } from 'react'
-import loadingVideo from './assets/dragon-video.mp4'
 import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
 import { getAllCreditCards } from './services/creditCards';
+import sleepingDragon from './assets/sleeping-dragon.jpeg';
 
 
 function App() {
@@ -53,15 +53,8 @@ function App() {
         <Home onLogin={handleLogin} />
       ) : !dataLoaded ? (
         <div className="loading-container">
+          <img src={sleepingDragon} alt="Sleeping dragon loading" className="loading-dragon" />
           <h1 className="loading-text">Loading your treasuries...</h1>
-          <video
-            className="loading-video"
-            src={loadingVideo}
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-          />
         </div>
       ) : (
         <>

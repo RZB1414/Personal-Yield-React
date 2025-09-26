@@ -271,10 +271,12 @@ const AddData = ({ setRefresh }) => {
                     <div className="form-group">
                         <label htmlFor="value">Value:</label>
                         <input
+                            className='value-input'
                             type="number"
                             id="value"
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
+                            placeholder="Insert value"
                             step="0.01"
                             required
                         />
@@ -300,8 +302,8 @@ const AddData = ({ setRefresh }) => {
                         <CloseIcon className='close-card-icon' onClick={() => { setIsAddingDividends(false); setSelectedFile(null); setFileName('Select a file'); setDividendsPassword(''); setDividendsEmail(''); }} />
                     </div>
                     <div style={{ marginBottom: 12 }}>
-                        <label htmlFor="broker-select" style={{ marginRight: 8 }}>Broker:</label>
-                        <select id="broker-select" value={broker} onChange={e => setBroker(e.target.value)} style={{ padding: 4 }}>
+                        <label htmlFor="broker-select" className='broker-select-name' style={{ marginRight: 8 }}>Broker:</label>
+                        <select id="broker-select" className='broker-select-add' value={broker} onChange={e => setBroker(e.target.value)} style={{ padding: 4 }}>
                             <option value="" disabled>Select</option>
                             <option value="XP">XP</option>
                             <option value="BTG">BTG</option>

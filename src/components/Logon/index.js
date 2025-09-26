@@ -1,6 +1,9 @@
 import React, { useState } from "react"
 import './Logon.css'
 import { createUser } from "../../services/login"
+import userIcon from '../../assets/icons/user-icon.svg';
+import emailIcon from '../../assets/icons/email-icon.svg';
+import lockIcon from '../../assets/icons/lock-icon.svg';
 
 const Logon = ({ onCreate }) => {
   const [form, setForm] = useState({ userName: "", email: "", password: "" })
@@ -39,38 +42,57 @@ const Logon = ({ onCreate }) => {
   }
 
   return (
-    <form
-     className="logon-form"
-     onSubmit={handleSubmit}>
-      <h2>Criar Usuário</h2>
-      <input
-        className="inputLogon"
-        name="userName"
-        placeholder="Name"
-        value={form.userName}
-        onChange={handleChange}
-        required
-      />
-      <input
-        className="inputLogon"
-        name="email"
-        type="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={handleChange}
-        required
-      />
-      <input
-        className="inputLogon"
-        name="password"
-        type="password"
-        placeholder="Senha"
-        value={form.password}
-        onChange={handleChange}
-        required
-      />
-      <button type="submit">Criar</button>
-      {message && <p>{message}</p>}
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <h2 className="auth-title">Sign Up</h2>
+      <div className="field-group">
+        <div className="input-wrapper">
+          <span className="input-icon" aria-hidden>
+            <img src={userIcon} alt="" width={20} height={20} loading="lazy" />
+          </span>
+          <input
+            className="text-input"
+            name="userName"
+            placeholder="Name"
+            value={form.userName}
+            onChange={handleChange}
+            required
+          />
+        </div>
+      </div>
+      <div className="field-group">
+        <div className="input-wrapper">
+          <span className="input-icon" aria-hidden>
+            <img src={emailIcon} alt="" width={20} height={20} loading="lazy" />
+          </span>
+          <input
+            className="text-input"
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+      </div>
+      <div className="field-group">
+        <div className="input-wrapper">
+          <span className="input-icon" aria-hidden>
+            <img src={lockIcon} alt="" width={20} height={20} loading="lazy" />
+          </span>
+          <input
+            className="text-input"
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+      </div>
+      <button className="primary-button" type="submit">Create Account</button>
+      {message && <p className="form-message">{message}</p>}
     </form>
   );
 };
