@@ -31,9 +31,6 @@ const Dividends = ({ fetchingAgain }) => {
         setGroupedDividends({})
         setShowingAllPeriod(false)
         setShowingDetailed(false)
-
-        console.log('xpDividends:', dividends);
-            console.log('btgDividends:', btgDividends);
         
 
         let sourceList = []
