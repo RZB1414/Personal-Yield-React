@@ -23,8 +23,22 @@ export function formatCurrency(value, currency = 'BRL', { allowZero = true, abs 
   const num = typeof value === 'number' ? value : Number(value);
   if (isNaN(num)) return '-';
   const val = abs ? Math.abs(num) : num;
-  const prefix = currency === 'USD' ? '$ ' : 'R$ ';
-  return prefix + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const normalizedCurrency = typeof currency === 'string'
+    ? currency.trim().toUpperCase()
+    : 'BRL';
+
+  const currencyConfig = {
+    USD: { prefix: 'US$ ', locale: 'en-US' },
+    BRL: { prefix: 'R$ ', locale: 'pt-BR' }
+  };
+
+  const { prefix, locale } = currencyConfig[normalizedCurrency] || {
+    prefix: normalizedCurrency ? `${normalizedCurrency} ` : '',
+    locale: 'pt-BR'
+  };
+
+  return prefix + val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function formatPercent(value, { decimals = 2, allowZero = true } = {}) {

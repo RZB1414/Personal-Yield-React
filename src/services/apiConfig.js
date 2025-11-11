@@ -5,4 +5,4 @@
 const RAILWAY_URL = "https://personal-yield-api-production.up.railway.app/";
 
 // Change this value to switch environments
-export const BASE_URL = RAILWAY_URL
+export const BASE_URL = RAILWAY_URL;

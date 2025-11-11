@@ -168,6 +168,16 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         }
     }
 
+    const getAveragePriceDisplay = (value, currency) => {
+        const formatted = formatCurrency(Number(value), currency);
+        if (formatted === '-') return formatted;
+        const normalizedCurrency = typeof currency === 'string' ? currency.trim().toUpperCase() : '';
+        if (normalizedCurrency === 'BRL') {
+            return formatted.replace(/^R\$ /, '');
+        }
+        return formatted;
+    };
+
     // Calcula o preço médio geral
 
     const totalInvestedBRL = updatedStocksList
@@ -401,7 +411,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             {formatCurrency(stock.currentPrice, stock.currency)}
                                                         </td>
 
-                                                        <td>{formatCurrency(Number(stock.averagePrice), stock.currency).replace(/^R\$ |^\$ /,'')}</td>
+                                                        <td>{getAveragePriceDisplay(stock.averagePrice, stock.currency)}</td>
 
                                                         <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'var(--chart-price-line)' : 'red' }}>
                                                             {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
@@ -558,7 +568,7 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                             <td>
                                                                 {formatCurrency(stock.currentPrice, stock.currency)}
                                                             </td>
-                                                            <td>{formatCurrency(Number(stock.averagePrice), stock.currency).replace(/^R\$ |^\$ /,'')}</td>
+                                                            <td>{getAveragePriceDisplay(stock.averagePrice, stock.currency)}</td>
 
                                                             <td style={{ color: Number(stock.dayPriceChangePercent) > 0 ? 'var(--chart-price-line)' : 'red' }}>
                                                                 {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}

@@ -22,7 +22,31 @@ const parseNumeric = (value) => {
     return Number.isFinite(value) ? value : NaN;
   }
   if (typeof value === 'string') {
-    const normalized = value.trim().replace(/\s+/g, '').replace(/\./g, '').replace(',', '.');
+    const trimmed = value.trim();
+    if (!trimmed) return NaN;
+    const sanitized = trimmed
+      .replace(/\s+/g, '')
+      .replace(/[%]/g, '')
+      .replace(/[^0-9.,+\-Ee]/g, '');
+
+    if (!sanitized) return NaN;
+
+    const decimalMatch = sanitized.match(/([.,])\d+$/);
+    const decimalSeparator = decimalMatch ? decimalMatch[1] : null;
+
+    let normalized;
+    if (decimalSeparator === ',') {
+      normalized = sanitized.replace(/\./g, '').replace(/,/g, '.');
+    } else if (decimalSeparator === '.') {
+      normalized = sanitized.replace(/,/g, '');
+    } else {
+      normalized = sanitized.replace(/[.,]/g, '');
+    }
+
+  if (!normalized || normalized === '+' || normalized === '-' || normalized === '.') {
+      return NaN;
+    }
+
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : NaN;
   }
@@ -47,10 +71,77 @@ const normalizePercentDecimal = (value) => {
   return numeric;
 };
 
+const currencySpecificTotalKeys = {
+  USD: [
+    'totalValueUSD',
+    'total_value_usd',
+    'totalValueUsd',
+    'total_value_Usd',
+    'positionValueUSD',
+    'position_value_usd',
+    'positionValueUsd',
+    'marketValueUSD',
+    'market_value_usd',
+    'marketValueUsd',
+    'portfolioValueUSD',
+    'portfolio_value_usd',
+    'dailyTotalUSD',
+    'daily_total_usd',
+    'totalUsd',
+    'total_usd',
+    'usdTotalValue'
+  ],
+  BRL: [
+    'totalValueBRL',
+    'total_value_brl',
+    'totalValueBrl',
+    'positionValueBRL',
+    'position_value_brl',
+    'positionValueBrl',
+    'marketValueBRL',
+    'market_value_brl',
+    'marketValueBrl',
+    'portfolioValueBRL',
+    'portfolio_value_brl',
+    'totalBrl',
+    'total_brl',
+    'brlTotalValue'
+  ]
+};
+
+const currencySpecificChangeKeys = {
+  USD: [
+    'dayChangeUSD',
+    'day_change_usd',
+    'dailyChangeUSD',
+    'daily_change_usd',
+    'dailyVariationUSD',
+    'daily_variation_usd',
+    'dailyGainUSD',
+    'daily_gain_usd',
+    'dayChangeValueUSD',
+    'day_change_value_usd'
+  ],
+  BRL: [
+    'dayChangeBRL',
+    'day_change_brl',
+    'dailyChangeBRL',
+    'daily_change_brl',
+    'dailyVariationBRL',
+    'daily_variation_brl',
+    'dailyGainBRL',
+    'daily_gain_brl',
+    'dayChangeValueBRL',
+    'day_change_value_brl'
+  ]
+};
+
 const deriveTotalValue = (snapshot) => {
   if (!snapshot || typeof snapshot !== 'object') return NaN;
 
-  const candidateKeys = [
+  const currencyCode = normalizeCurrency(snapshot?.currency);
+
+  const genericCandidates = [
     'totalValue',
     'total_value',
     'total',
@@ -58,26 +149,26 @@ const deriveTotalValue = (snapshot) => {
     'market_value',
     'positionValue',
     'position_value',
-    'positionValueBRL',
-    'position_value_brl',
-    'positionValueUSD',
-    'position_value_usd',
     'currentValue',
     'current_value',
     'portfolioValue',
     'portfolio_value',
     'totalInvested',
     'total_invested',
-    'totalValueBRL',
-    'total_value_brl',
-    'totalValueUSD',
-    'total_value_usd',
     'value',
     'grossValue',
     'netValue'
   ];
 
+  const candidateKeys = [
+    ...(currencySpecificTotalKeys[currencyCode] || []),
+    ...genericCandidates
+  ];
+
+  const seen = new Set();
   for (const key of candidateKeys) {
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
     const numeric = parseNumeric(snapshot?.[key]);
     if (Number.isFinite(numeric)) {
       return numeric;
@@ -173,7 +264,10 @@ const deriveTotalValue = (snapshot) => {
 const deriveDailyChangeValue = (snapshot) => {
   if (!snapshot || typeof snapshot !== 'object') return NaN;
 
+  const currencyCode = normalizeCurrency(snapshot?.currency);
+
   const changeKeys = [
+    ...(currencySpecificChangeKeys[currencyCode] || []),
     'dayChange',
     'day_change',
     'dayChangeValue',
@@ -194,7 +288,10 @@ const deriveDailyChangeValue = (snapshot) => {
     'appreciation_value'
   ];
 
+  const seen = new Set();
   for (const key of changeKeys) {
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
     const numeric = parseNumeric(snapshot?.[key]);
     if (Number.isFinite(numeric)) {
       return numeric;
@@ -213,6 +310,7 @@ const deriveDailyChangeValue = (snapshot) => {
   ];
 
   const baseKeys = [
+    ...(currencySpecificTotalKeys[currencyCode] || []),
     'positionValue',
     'position_value',
     'totalValue',
@@ -222,11 +320,7 @@ const deriveDailyChangeValue = (snapshot) => {
     'currentValue',
     'current_value',
     'portfolioValue',
-    'portfolio_value',
-    'totalValueBRL',
-    'total_value_brl',
-    'totalValueUSD',
-    'total_value_usd'
+    'portfolio_value'
   ];
 
   const percent = percentKeys
@@ -352,18 +446,44 @@ export default function Snapshots({ userId }) {
       if (currencyKeys.length === 0) {
         return [];
       }
+
       const byDate = new Map();
       for (const snapshot of items) {
         const date = ensureIsoDate(snapshot?.tradingDate);
         if (!date) continue;
-        const pctDecimal = normalizePercentDecimal(snapshot?.dayChangePercent);
-        if (!Number.isFinite(pctDecimal)) continue;
+
         const currencyKey = normalizeCurrency(snapshot?.currency);
         if (!currencyKey) continue;
+
+        const totalValue = deriveTotalValue(snapshot);
+        const dailyChange = deriveDailyChangeValue(snapshot);
+
         const entry = byDate.get(date) || new Map();
-        const stats = entry.get(currencyKey) || { sumDecimal: 0, count: 0 };
-        stats.sumDecimal += pctDecimal;
-        stats.count += 1;
+        const stats = entry.get(currencyKey) || {
+          totalValueSum: 0,
+          hasTotal: false,
+          dailyChangeSum: 0,
+          hasDailyChange: false,
+          percentSum: 0,
+          percentCount: 0
+        };
+
+        if (Number.isFinite(totalValue)) {
+          stats.totalValueSum += totalValue;
+          stats.hasTotal = true;
+        }
+
+        if (Number.isFinite(dailyChange)) {
+          stats.dailyChangeSum += dailyChange;
+          stats.hasDailyChange = true;
+        }
+
+        const pctDecimal = normalizePercentDecimal(snapshot?.dayChangePercent);
+        if (Number.isFinite(pctDecimal)) {
+          stats.percentSum += pctDecimal;
+          stats.percentCount += 1;
+        }
+
         entry.set(currencyKey, stats);
         byDate.set(date, entry);
       }
@@ -374,7 +494,21 @@ export default function Snapshots({ userId }) {
           const base = { date, totalValue: null };
           currencyKeys.forEach((currencyKey) => {
             const stats = currencyMap.get(currencyKey);
-            base[`dayChangePercent_${currencyKey}`] = stats && stats.count > 0 ? (stats.sumDecimal / stats.count) * 100 : null;
+            if (!stats) {
+              base[`dayChangePercent_${currencyKey}`] = null;
+              return;
+            }
+
+            const { totalValueSum, hasTotal, dailyChangeSum, hasDailyChange, percentSum, percentCount } = stats;
+            if (hasTotal && hasDailyChange) {
+              const previousValue = totalValueSum - dailyChangeSum;
+              if (!approxEq(previousValue, 0)) {
+                base[`dayChangePercent_${currencyKey}`] = (dailyChangeSum / previousValue) * 100;
+                return;
+              }
+            }
+            const avgPercent = percentCount > 0 ? (percentSum / percentCount) * 100 : null;
+            base[`dayChangePercent_${currencyKey}`] = Number.isFinite(avgPercent) ? avgPercent : null;
           });
           return base;
         });
@@ -447,8 +581,11 @@ export default function Snapshots({ userId }) {
         }
 
         let percent = null;
-        if (Number.isFinite(dailyChange) && Number.isFinite(prevAbsolute) && prevAbsolute !== 0) {
-          percent = (dailyChange / prevAbsolute) * 100;
+        const baseForPercent = Number.isFinite(prevAbsolute)
+          ? prevAbsolute
+          : (Number.isFinite(absolute) && Number.isFinite(dailyChange) ? absolute - dailyChange : null);
+        if (Number.isFinite(dailyChange) && Number.isFinite(baseForPercent) && !approxEq(baseForPercent, 0)) {
+          percent = (dailyChange / baseForPercent) * 100;
         } else if (Number.isFinite(row.dayChangePercentOriginal)) {
           percent = row.dayChangePercentOriginal;
         }
@@ -512,6 +649,7 @@ export default function Snapshots({ userId }) {
       });
 
     let prevAbsolute = null;
+    let prevClosePrice = null;
     return rows.map((row) => {
       let absolute = Number.isFinite(row.totalValueAbsolute) ? row.totalValueAbsolute : null;
       if (!Number.isFinite(absolute) && Number.isFinite(prevAbsolute) && Number.isFinite(row.dailyChangeFallback)) {
@@ -530,10 +668,23 @@ export default function Snapshots({ userId }) {
       }
 
       let percent = null;
-      if (Number.isFinite(dailyChange) && Number.isFinite(prevAbsolute) && prevAbsolute !== 0) {
-        percent = (dailyChange / prevAbsolute) * 100;
+      const baseForPercent = Number.isFinite(prevAbsolute)
+        ? prevAbsolute
+        : (Number.isFinite(absolute) && Number.isFinite(dailyChange) ? absolute - dailyChange : null);
+      if (Number.isFinite(dailyChange) && Number.isFinite(baseForPercent) && !approxEq(baseForPercent, 0)) {
+        percent = (dailyChange / baseForPercent) * 100;
       } else if (Number.isFinite(row.dayChangePercentOriginal)) {
         percent = row.dayChangePercentOriginal;
+      }
+
+      const pricePercent = (Number.isFinite(row.closePrice) && Number.isFinite(prevClosePrice) && !approxEq(prevClosePrice, 0))
+        ? ((row.closePrice - prevClosePrice) / prevClosePrice) * 100
+        : null;
+
+      if (Number.isFinite(pricePercent)) {
+        if (!Number.isFinite(percent) || Math.abs(pricePercent - percent) > 0.2) {
+          percent = pricePercent;
+        }
       }
 
       if (Number.isFinite(absolute)) {
@@ -544,6 +695,10 @@ export default function Snapshots({ userId }) {
           prevAbsolute = inferred;
           absolute = inferred;
         }
+      }
+
+      if (Number.isFinite(row.closePrice)) {
+        prevClosePrice = row.closePrice;
       }
 
       return {
@@ -900,15 +1055,21 @@ export default function Snapshots({ userId }) {
                   const dateLabel = typeof label === 'string' && label.length >= 10
                     ? `${label.slice(8, 10)}/${label.slice(5, 7)}`
                     : label;
+                  const payloadCurrency = normalizeCurrency(payload?.[0]?.payload?.currency);
+                  const effectiveCurrency = (payloadCurrency && payloadCurrency !== 'ALL')
+                    ? payloadCurrency
+                    : normalizeCurrency(currency);
                   const items = payload
                     .map((item, index) => {
                       const value = Number(item?.value);
                       if (!Number.isFinite(value)) return null;
+                      const dataKey = item?.dataKey || item?.name || `series-${index}`;
                       return {
-                        key: item?.dataKey || item?.name || `series-${index}`,
+                        key: dataKey,
                         label: item?.name || item?.dataKey,
                         value,
-                        color: item?.color
+                        color: item?.color,
+                        isPercentSeries: typeof item?.dataKey === 'string' && item.dataKey.startsWith('dayChangePercent')
                       };
                     })
                     .filter(Boolean);
@@ -921,18 +1082,17 @@ export default function Snapshots({ userId }) {
                   const dailyChangeValue = Number.isFinite(dailyChangeFromPayload)
                     ? dailyChangeFromPayload
                     : deriveDailyChangeValue(payload?.[0]?.payload);
-                  const payloadCurrency = normalizeCurrency(payload?.[0]?.payload?.currency);
-                  const effectiveCurrency = (payloadCurrency && payloadCurrency !== 'ALL')
-                    ? payloadCurrency
-                    : normalizeCurrency(currency);
                   return (
                     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: 8, borderRadius: 6 }}>
                       <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{dateLabel}</div>
                       {items.map((item) => {
                         const color = item.value < 0 ? '#ff4d4f' : item.color || '#ffffff';
+                        const display = item.isPercentSeries
+                          ? formatPercent(item.value)
+                          : formatCurrency(item.value, effectiveCurrency);
                         return (
                           <div key={item.key} style={{ fontWeight: 600, color }}>
-                            {item.label}: {formatPercent(item.value)}
+                            {item.label}: {display}
                           </div>
                         );
                       })}
