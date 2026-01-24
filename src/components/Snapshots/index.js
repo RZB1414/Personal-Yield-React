@@ -773,7 +773,7 @@ export default function Snapshots({ userId }) {
         prevClosePrice = row.closePrice;
       }
 
-      // Cumulative calculation
+      // Cumulative calculation based on TWR (Time Weighted Return)
       if (Number.isFinite(percent)) {
         runningCumulative = runningCumulative * (1 + percent / 100);
       }
