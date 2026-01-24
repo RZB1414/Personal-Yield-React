@@ -33,8 +33,31 @@ api.interceptors.request.use(
  */
 export async function getSnapshots(params = {}) {
 	try {
-		const response = await api.get('/auth/snapshots', { params });
-		return response.data;
+		// Default limit to max allowed by backend to minimize requests
+		const initialParams = { ...params, page: 1, limit: 2000 };
+		const response = await api.get('/auth/snapshots', { params: initialParams });
+
+		let { items, total } = response.data;
+		items = Array.isArray(items) ? items : [];
+
+		// Check if we have more pages
+		let totalFetched = items.length;
+		let currentPage = 1;
+
+		// While we haven't fetched all items, keep requesting next pages
+		while (totalFetched < total) {
+			currentPage++;
+			const nextParams = { ...initialParams, page: currentPage };
+			const nextRes = await api.get('/auth/snapshots', { params: nextParams });
+			const nextItems = Array.isArray(nextRes.data?.items) ? nextRes.data.items : [];
+
+			if (nextItems.length === 0) break; // Safety break
+
+			items = items.concat(nextItems);
+			totalFetched += nextItems.length;
+		}
+
+		return { ...response.data, items, total };
 	} catch (err) {
 		console.error('Error fetching snapshots:', err);
 		throw err;

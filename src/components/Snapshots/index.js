@@ -43,7 +43,7 @@ const parseNumeric = (value) => {
       normalized = sanitized.replace(/[.,]/g, '');
     }
 
-  if (!normalized || normalized === '+' || normalized === '-' || normalized === '.') {
+    if (!normalized || normalized === '+' || normalized === '-' || normalized === '.') {
       return NaN;
     }
 
@@ -375,7 +375,7 @@ export default function Snapshots({ userId }) {
   const [items, setItems] = useState([]);
   const [symbol, setSymbol] = useState('');
   const [currency, setCurrency] = useState(CurrencyMode.BRL);
-  const [range] = useState('30d'); // future use
+  const [range, setRange] = useState('30d');
   const [clickedPoint, setClickedPoint] = useState(null);
   const [tooltipEnabled, setTooltipEnabled] = useState(false);
 
@@ -396,8 +396,24 @@ export default function Snapshots({ userId }) {
       setLoading(true);
       setError(null);
       try {
-        // default last 30d from backend behavior
-        const data = await getSnapshots({ userId });
+        const params = { userId };
+        if (range === 'ALL') {
+          params.all = true;
+        } else {
+          const now = new Date();
+          if (range === '30d') {
+            now.setDate(now.getDate() - 30);
+          } else if (range === '90d') {
+            now.setDate(now.getDate() - 90);
+          } else if (range === '1y') {
+            now.setFullYear(now.getFullYear() - 1);
+          } else if (range === 'YTD') {
+            now.setMonth(0, 1);
+          }
+          params.from = now.toISOString().split('T')[0];
+        }
+
+        const data = await getSnapshots(params);
         const list = Array.isArray(data?.items) ? data.items : [];
         // ensure tradingDate is Date
         const normalized = list.map((d) => ({
@@ -406,7 +422,9 @@ export default function Snapshots({ userId }) {
         }));
         setItems(normalized);
         // default selection: ALL aggregated
-        setSymbol('ALL');
+        if (symbol === '' && currency === CurrencyMode.BRL) {
+          setSymbol('ALL');
+        }
       } catch (e) {
         setError('Erro ao carregar snapshots');
       } finally {
@@ -488,7 +506,7 @@ export default function Snapshots({ userId }) {
         byDate.set(date, entry);
       }
 
-      return Array.from(byDate.entries())
+      const sortedBase = Array.from(byDate.entries())
         .sort((a, b) => (a[0] < b[0] ? -1 : 1))
         .map(([date, currencyMap]) => {
           const base = { date, totalValue: null };
@@ -512,6 +530,22 @@ export default function Snapshots({ userId }) {
           });
           return base;
         });
+
+      // Calculate cumulative
+      const running = {};
+      currencyKeys.forEach(c => { running[c] = 1.0; });
+
+      return sortedBase.map(row => {
+        const newRow = { ...row };
+        currencyKeys.forEach(c => {
+          const daily = row[`dayChangePercent_${c}`];
+          if (Number.isFinite(daily)) {
+            running[c] = running[c] * (1 + daily / 100);
+          }
+          newRow[`accumulatedPercent_${c}`] = (running[c] - 1) * 100;
+        });
+        return newRow;
+      });
     }
 
     const normalizedCurrency = normalizeCurrency(currency);
@@ -563,6 +597,8 @@ export default function Snapshots({ userId }) {
         });
 
       let prevAbsolute = null;
+      let runningCumulative = 1.0;
+
       return rows.map((row) => {
         let absolute = Number.isFinite(row.totalValueAbsolute) ? row.totalValueAbsolute : null;
         if (!Number.isFinite(absolute) && Number.isFinite(prevAbsolute) && Number.isFinite(row.dailyChangeFallback)) {
@@ -600,12 +636,18 @@ export default function Snapshots({ userId }) {
           }
         }
 
+        // Cumulative calculation
+        if (Number.isFinite(percent)) {
+          runningCumulative = runningCumulative * (1 + percent / 100);
+        }
+
         return {
           date: row.date,
           closePrice: row.closePrice,
           dayChangePercent: Number.isFinite(percent)
             ? percent
             : (Number.isFinite(row.dayChangePercentOriginal) ? row.dayChangePercentOriginal : null),
+          accumulatedPercent: (runningCumulative - 1) * 100,
           totalValue: Number.isFinite(absolute) ? absolute : null,
           dailyChange: Number.isFinite(dailyChange) ? dailyChange : null,
           currency: row.currency
@@ -613,6 +655,7 @@ export default function Snapshots({ userId }) {
       });
     }
 
+    // Specific symbol
     const rows = items
       .filter((snapshot) => {
         if (!snapshot?.tradingDate) return false;
@@ -650,6 +693,8 @@ export default function Snapshots({ userId }) {
 
     let prevAbsolute = null;
     let prevClosePrice = null;
+    let runningCumulative = 1.0;
+
     return rows.map((row) => {
       let absolute = Number.isFinite(row.totalValueAbsolute) ? row.totalValueAbsolute : null;
       if (!Number.isFinite(absolute) && Number.isFinite(prevAbsolute) && Number.isFinite(row.dailyChangeFallback)) {
@@ -701,12 +746,18 @@ export default function Snapshots({ userId }) {
         prevClosePrice = row.closePrice;
       }
 
+      // Cumulative calculation
+      if (Number.isFinite(percent)) {
+        runningCumulative = runningCumulative * (1 + percent / 100);
+      }
+
       return {
         date: row.date,
         closePrice: row.closePrice,
         dayChangePercent: Number.isFinite(percent)
           ? percent
           : (Number.isFinite(row.dayChangePercentOriginal) ? row.dayChangePercentOriginal : null),
+        accumulatedPercent: (runningCumulative - 1) * 100,
         currency: row.currency,
         totalValue: Number.isFinite(absolute) ? absolute : null,
         dailyChange: Number.isFinite(dailyChange) ? dailyChange : null
@@ -718,7 +769,7 @@ export default function Snapshots({ userId }) {
     for (const row of chartData) {
       if (!row || typeof row !== 'object') continue;
       for (const [key, rawValue] of Object.entries(row)) {
-        if (key === 'closePrice' || key === 'dayChangePercent' || key.startsWith('dayChangePercent_')) {
+        if (key === 'closePrice' || key === 'accumulatedPercent' || key.startsWith('accumulatedPercent_')) {
           const value = Number(rawValue);
           if (Number.isFinite(value)) {
             return true;
@@ -738,9 +789,9 @@ export default function Snapshots({ userId }) {
 
   const percentSeriesKeys = useMemo(() => {
     if (currency === 'ALL') {
-      return availableCurrencies.map((code) => `dayChangePercent_${code}`);
+      return availableCurrencies.map((code) => `accumulatedPercent_${code}`);
     }
-    return ['dayChangePercent'];
+    return ['accumulatedPercent'];
   }, [currency, availableCurrencies]);
 
   const percentSeriesValues = useMemo(() => {
@@ -765,17 +816,16 @@ export default function Snapshots({ userId }) {
     };
   }, [percentSeriesValues]);
   const yRightDomain = useMemo(() => {
-    const span = rightMinMax.max - rightMinMax.min;
-    const dynamicPad = span < 2 ? 3 : span < 5 ? 2 : 1;
-    const pad = dynamicPad;
-    let minBound = Math.min(rightMinMax.min, 0) - pad;
-    let maxBound = Math.max(rightMinMax.max, 0) + pad;
+    // Exact domain logic used for the ticks calculation
+    let minBound = Math.min(rightMinMax.min, 0);
+    let maxBound = Math.max(rightMinMax.max, 0);
+
     if (approxEq(maxBound, minBound)) {
-      // ensure a visible span
-      maxBound = minBound + 2 * pad;
+      maxBound = minBound + 10; // ensure visual span if flat
     }
     return [minBound, maxBound];
   }, [rightMinMax]);
+
   const leftMinMax = useMemo(() => {
     if (symbol === 'ALL') return { min: 0, max: 0 };
     const vals = chartData.map(d => Number(d.closePrice)).filter(Number.isFinite);
@@ -793,19 +843,29 @@ export default function Snapshots({ userId }) {
     return [minBound, maxBound];
   }, [leftMinMax, symbol]);
 
-  // Build ticks: show only [min, 0, max]
+  // Build ticks: show [min, 0, max] and intermediate
   const uniqueSorted = (arr) => Array.from(new Set(arr.filter((v) => Number.isFinite(v)))).sort((a, b) => a - b);
 
   const rightTicks = useMemo(() => {
-    if (percentSeriesValues.length === 0) return [0];
-    const min = Math.min(...percentSeriesValues);
-    const max = Math.max(...percentSeriesValues);
-    const span = max - min;
-    const extra = span < 2 ? 3 : span < 5 ? 2 : 1;
-    const paddedMin = Math.min(min, 0) - extra;
-    const paddedMax = Math.max(max, 0) + extra;
-    return uniqueSorted([paddedMin, 0, paddedMax]);
-  }, [percentSeriesValues]);
+    if (chartData.length === 0) return [0];
+
+    const min = rightMinMax.min;
+    // Start with 0 and min
+    const ticks = [0, min];
+
+    // Add last values
+    const lastRow = chartData[chartData.length - 1];
+    if (lastRow) {
+      for (const key of percentSeriesKeys) {
+        const val = Number(lastRow[key]);
+        if (Number.isFinite(val)) {
+          ticks.push(val);
+        }
+      }
+    }
+
+    return uniqueSorted(ticks);
+  }, [rightMinMax, chartData, percentSeriesKeys]);
 
   const leftTicks = useMemo(() => {
     if (symbol === 'ALL') return undefined;
@@ -885,12 +945,22 @@ export default function Snapshots({ userId }) {
           </label>
           <label style={{ marginLeft: 8 }}>
             Stock:
-            <select value={symbol} onChange={(e) => setSymbol(e.target.value) }>
+            <select value={symbol} onChange={(e) => setSymbol(e.target.value)}>
               {symbolsWithAll.map((s) => (
                 <option key={s} value={s}>
                   {s.replace('.SA', '')}
                 </option>
               ))}
+            </select>
+          </label>
+          <label >
+            Período:
+            <select value={range} onChange={(e) => setRange(e.target.value)}>
+              <option value="30d">30 Days</option>
+              <option value="90d">90 Days</option>
+              <option value="YTD">YTD</option>
+              <option value="1y">1 Year</option>
+              <option value="ALL">All</option>
             </select>
           </label>
         </div>
@@ -949,18 +1019,18 @@ export default function Snapshots({ userId }) {
             }
             return (
               <>
-              <div>
-                {date} — {validEntries.map((entry, index) => {
-                  const color = entry.value < 0 ? '#ff4d4f' : '#ffffff';
-                  return (
-                    <span key={entry.label} style={{ color }}>
-                      {entry.label}: {formatPercent(entry.value)}
-                      {index < validEntries.length - 1 ? ' • ' : ''}
-                    </span>
-                  );
-                })}
-              </div>
-                
+                <div>
+                  {date} — {validEntries.map((entry, index) => {
+                    const color = entry.value < 0 ? '#ff4d4f' : '#ffffff';
+                    return (
+                      <span key={entry.label} style={{ color }}>
+                        {entry.label}: {formatPercent(entry.value)}
+                        {index < validEntries.length - 1 ? ' • ' : ''}
+                      </span>
+                    );
+                  })}
+                </div>
+
                 {totalValueDisplay && (
                   <>
                     <span style={{ color: '#ffffff' }}>Valor total: {totalValueDisplay}</span>
@@ -984,10 +1054,10 @@ export default function Snapshots({ userId }) {
 
       {shouldShowChart && (
         <div className="chart-container">
-              <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={320}>
             <LineChart
               data={chartData}
-                  margin={{ top: 28, right: 30, left: 10, bottom: 28 }}
+              margin={{ top: 28, right: 30, left: 10, bottom: 28 }}
               onMouseDown={(e) => {
                 if (e && e.activePayload && e.activePayload.length > 0) {
                   setTooltipEnabled(true);
@@ -1069,7 +1139,7 @@ export default function Snapshots({ userId }) {
                         label: item?.name || item?.dataKey,
                         value,
                         color: item?.color,
-                        isPercentSeries: typeof item?.dataKey === 'string' && item.dataKey.startsWith('dayChangePercent')
+                        isPercentSeries: typeof item?.dataKey === 'string' && item.dataKey.startsWith('accumulatedPercent')
                       };
                     })
                     .filter(Boolean);
@@ -1096,7 +1166,22 @@ export default function Snapshots({ userId }) {
                           </div>
                         );
                       })}
-                      
+
+                      {/* Daily Variation Percent */}
+                      <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        {activeCurrencyLabels.map((code) => {
+                          const key = currency === CurrencyMode.ALL ? `dayChangePercent_${code}` : 'dayChangePercent';
+                          const val = Number(payload[0]?.payload?.[key]);
+                          if (!Number.isFinite(val)) return null;
+                          const color = val < 0 ? '#ff4d4f' : '#06d6a0';
+                          return (
+                            <div key={code} style={{ color, fontSize: 12 }}>
+                              Dia ({code}): {formatPercent(val)}
+                            </div>
+                          );
+                        })}
+                      </div>
+
                       {currency !== CurrencyMode.ALL && Number.isFinite(totalValue) && (
                         <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
                           Valor total: {formatCurrency(totalValue, effectiveCurrency)}
@@ -1129,28 +1214,28 @@ export default function Snapshots({ userId }) {
               )}
               {currency === CurrencyMode.ALL
                 ? availableCurrencies.map((code, index) => {
-                    const dataKey = `dayChangePercent_${code}`;
-                    const stroke = currencyColorMap[code] || fallbackLineColors[index % fallbackLineColors.length];
-                    return (
-                      <Line
-                        key={dataKey}
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey={dataKey}
-                        stroke={stroke}
-                        name={`Variação % (${code})`}
-                        dot={chartData.length <= 1}
-                        connectNulls
-                      />
-                    );
-                  })
+                  const dataKey = `accumulatedPercent_${code}`;
+                  const stroke = currencyColorMap[code] || fallbackLineColors[index % fallbackLineColors.length];
+                  return (
+                    <Line
+                      key={dataKey}
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey={dataKey}
+                      stroke={stroke}
+                      name={`Acumulado % (${code})`}
+                      dot={chartData.length <= 1}
+                      connectNulls
+                    />
+                  );
+                })
                 : (
                   <Line
                     yAxisId="right"
                     type="monotone"
-                    dataKey="dayChangePercent"
+                    dataKey="accumulatedPercent"
                     stroke="var(--chart-quantity-line)"
-                    name="Variação %"
+                    name="Acumulado %"
                     dot={chartData.length <= 1}
                     connectNulls
                   />
