@@ -1107,10 +1107,7 @@ export default function Snapshots({ userId }) {
                     })
                     .filter(Boolean);
                   if (items.length === 0) return null;
-                  const totalValueFromPayload = Number(payload?.[0]?.payload?.totalValue);
-                  const totalValue = Number.isFinite(totalValueFromPayload)
-                    ? totalValueFromPayload
-                    : deriveTotalValue(payload?.[0]?.payload);
+
                   const dailyChangeFromPayload = Number(payload?.[0]?.payload?.dailyChange);
                   const dailyChangeValue = Number.isFinite(dailyChangeFromPayload)
                     ? dailyChangeFromPayload
