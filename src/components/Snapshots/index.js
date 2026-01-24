@@ -537,18 +537,39 @@ export default function Snapshots({ userId }) {
           return base;
         });
 
-      // Calculate cumulative
-      const running = {};
-      currencyKeys.forEach(c => { running[c] = 1.0; });
+      // Calculate cumulative using simple growth relative to the first valid total value
+      const initialValues = {};
+
+      // Find initial values
+      for (const row of sortedBase) {
+        let allFound = true;
+        for (const c of currencyKeys) {
+          if (initialValues[c] === undefined) {
+            const val = row[`totalValue_${c}`];
+            if (Number.isFinite(val)) {
+              initialValues[c] = val;
+            }
+          }
+          if (initialValues[c] === undefined) {
+            allFound = false;
+          }
+        }
+        if (allFound) break;
+      }
 
       return sortedBase.map(row => {
         const newRow = { ...row };
         currencyKeys.forEach(c => {
-          const daily = row[`dayChangePercent_${c}`];
-          if (Number.isFinite(daily)) {
-            running[c] = running[c] * (1 + daily / 100);
+          const currentTotal = row[`totalValue_${c}`];
+          const initial = initialValues[c];
+
+          if (Number.isFinite(currentTotal) && Number.isFinite(initial) && !approxEq(initial, 0)) {
+            newRow[`accumulatedPercent_${c}`] = ((currentTotal - initial) / initial) * 100;
+          } else {
+            // Fallback for cases where total value might be missing but we have percent data?
+            // Or just null if we can't calculate growth
+            newRow[`accumulatedPercent_${c}`] = null;
           }
-          newRow[`accumulatedPercent_${c}`] = (running[c] - 1) * 100;
         });
         return newRow;
       });
@@ -886,17 +907,16 @@ export default function Snapshots({ userId }) {
     return uniqueSorted([min, max]);
   }, [chartData, symbol]);
 
-  // Reset selection when currency changes
+  // Reset selection when currency, symbol, or range changes
+  useEffect(() => {
+    setClickedPoint(null);
+    setTooltipEnabled(false);
+  }, [currency, symbol, range]);
+
+  // Keep the specific logic for resetting symbol when currency changes
   useEffect(() => {
     setSymbol('ALL');
-    setClickedPoint(null);
-    setTooltipEnabled(false);
   }, [currency]);
-
-  useEffect(() => {
-    setClickedPoint(null);
-    setTooltipEnabled(false);
-  }, [symbol]);
 
   const activeCurrencyLabels = useMemo(() => (
     currency === CurrencyMode.ALL ? availableCurrencies : [currency]
