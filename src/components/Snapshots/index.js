@@ -373,9 +373,9 @@ export default function Snapshots({ userId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [items, setItems] = useState([]);
-  const [symbol, setSymbol] = useState('');
-  const [currency, setCurrency] = useState(CurrencyMode.BRL);
-  const [range, setRange] = useState('30d');
+  const [symbol, setSymbol] = useState('ALL');
+  const [currency, setCurrency] = useState(CurrencyMode.ALL);
+  const [range, setRange] = useState('YTD');
   const [clickedPoint, setClickedPoint] = useState(null);
   const [tooltipEnabled, setTooltipEnabled] = useState(false);
 
@@ -519,6 +519,11 @@ export default function Snapshots({ userId }) {
             }
 
             const { totalValueSum, hasTotal, dailyChangeSum, hasDailyChange, percentSum, percentCount } = stats;
+
+            if (hasTotal) {
+              base[`totalValue_${currencyKey}`] = totalValueSum;
+            }
+
             if (hasTotal && hasDailyChange) {
               const previousValue = totalValueSum - dailyChangeSum;
               if (!approxEq(previousValue, 0)) {
@@ -975,76 +980,52 @@ export default function Snapshots({ userId }) {
             const date = typeof clickedPoint.date === 'string' && clickedPoint.date.length >= 10
               ? `${clickedPoint.date.slice(8, 10)}/${clickedPoint.date.slice(5, 7)}`
               : clickedPoint.date;
-            const valueEntries = activeCurrencyLabels.map((label) => {
-              const key = currency === CurrencyMode.ALL ? `dayChangePercent_${label}` : 'dayChangePercent';
-              return {
-                label,
-                value: Number(clickedPoint.values?.[key])
-              };
-            });
-            const validEntries = valueEntries.filter((entry) => Number.isFinite(entry.value));
-            const totalValueDisplay = (
-              currency !== CurrencyMode.ALL
-              && Number.isFinite(clickedPoint?.totalValue)
-              && formatCurrency(
-                clickedPoint.totalValue,
-                clickedPoint.currency || normalizeCurrency(currency)
-              )
-            );
-            const dailyChangeDisplay = (
-              currency !== CurrencyMode.ALL
-              && Number.isFinite(clickedPoint?.dailyChange)
-              && formatCurrency(
-                clickedPoint.dailyChange,
-                clickedPoint.currency || normalizeCurrency(currency)
-              )
-            );
-            if (validEntries.length === 0) {
-              return (
-                <>
-                  {date}
-                  {totalValueDisplay ? (
-                    <>
-                      <span style={{ color: '#ffffff' }}>Valor total: {totalValueDisplay}</span>
-                    </>
-                  ) : null}
-                  {dailyChangeDisplay ? (
-                    <>
-                      <span style={{ color: clickedPoint.dailyChange < 0 ? '#ff4d4f' : '#06d6a0' }}>
-                        Variação diária: {dailyChangeDisplay}
-                      </span>
-                    </>
-                  ) : null}
-                </>
-              );
-            }
+
+            const payload = clickedPoint.payload || {};
+
             return (
-              <>
-                <div>
-                  {date} — {validEntries.map((entry, index) => {
-                    const color = entry.value < 0 ? '#ff4d4f' : '#ffffff';
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 'bold' }}>{date}</div>
+
+                {/* 1. Percent Values (Accumulated) */}
+                {activeCurrencyLabels.map(code => {
+                  const key = currency === CurrencyMode.ALL ? `accumulatedPercent_${code}` : 'accumulatedPercent';
+                  const val = currency === CurrencyMode.ALL ? payload[key] : payload.accumulatedPercent;
+
+                  if (!Number.isFinite(val)) return null;
+
+                  const color = currency === CurrencyMode.ALL
+                    ? (currencyColorMap[code] || '#ffffff')
+                    : 'var(--chart-quantity-line)';
+
+                  return (
+                    <div key={`pct-${code}`} style={{ color, fontWeight: 600 }}>
+                      {currency === CurrencyMode.ALL ? `Acumulado % (${code})` : 'Acumulado %'}: {formatPercent(val)}
+                    </div>
+                  );
+                })}
+
+                {/* 2. Total Values (BRL / USD) */}
+                <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  {activeCurrencyLabels.map(code => {
+                    let val = null;
+                    if (currency === CurrencyMode.ALL) {
+                      val = payload[`totalValue_${code}`];
+                    } else {
+                      if (code === currency) {
+                        val = payload.totalValueAbsolute ?? payload.totalValue;
+                      }
+                    }
+
+                    if (!Number.isFinite(val)) return null;
                     return (
-                      <span key={entry.label} style={{ color }}>
-                        {entry.label}: {formatPercent(entry.value)}
-                        {index < validEntries.length - 1 ? ' • ' : ''}
-                      </span>
+                      <div key={`tot-${code}`} style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
+                        Valor Total ({code}): {formatCurrency(val, code)}
+                      </div>
                     );
                   })}
                 </div>
-
-                {totalValueDisplay && (
-                  <>
-                    <span style={{ color: '#ffffff' }}>Valor total: {totalValueDisplay}</span>
-                  </>
-                )}
-                {dailyChangeDisplay && (
-                  <>
-                    <span style={{ color: clickedPoint.dailyChange < 0 ? '#ff4d4f' : '#06d6a0' }}>
-                      Variação diária: {dailyChangeDisplay}
-                    </span>
-                  </>
-                )}
-              </>
+              </div>
             );
           })()}
         </div>
@@ -1072,30 +1053,11 @@ export default function Snapshots({ userId }) {
               }}
               onClick={(e) => {
                 if (e && Array.isArray(e.activePayload) && e.activePayload.length > 0) {
-                  const values = e.activePayload.reduce((acc, item) => {
-                    const val = Number(item?.value);
-                    if (Number.isFinite(val) && item?.dataKey) {
-                      acc[item.dataKey] = val;
-                    }
-                    return acc;
-                  }, {});
-                  const date = e.activeLabel ?? e.activePayload[0]?.payload?.date;
                   const firstPayload = e.activePayload[0]?.payload;
-                  const totalValueFromPayload = Number(firstPayload?.totalValue);
-                  const computedTotal = Number.isFinite(totalValueFromPayload)
-                    ? totalValueFromPayload
-                    : deriveTotalValue(firstPayload);
-                  const dailyChangeFromPayload = Number(firstPayload?.dailyChange);
-                  const computedDailyChange = Number.isFinite(dailyChangeFromPayload)
-                    ? dailyChangeFromPayload
-                    : deriveDailyChangeValue(firstPayload);
-                  const payloadCurrency = normalizeCurrency(firstPayload?.currency);
                   setClickedPoint({
-                    date,
-                    values,
-                    totalValue: Number.isFinite(computedTotal) ? computedTotal : null,
-                    dailyChange: Number.isFinite(computedDailyChange) ? computedDailyChange : null,
-                    currency: payloadCurrency && payloadCurrency !== 'ALL' ? payloadCurrency : normalizeCurrency(currency)
+                    date: e.activeLabel ?? firstPayload?.date,
+                    payload: firstPayload,
+                    currency
                   });
                 }
               }}
@@ -1183,11 +1145,27 @@ export default function Snapshots({ userId }) {
                         })}
                       </div>
 
-                      {currency !== CurrencyMode.ALL && Number.isFinite(totalValue) && (
-                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-                          Valor total: {formatCurrency(totalValue, effectiveCurrency)}
-                        </div>
-                      )}
+                      {/* Total Values (BRL / USD) */}
+                      <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        {activeCurrencyLabels.map(code => {
+                          let val = null;
+                          const payloadData = payload[0]?.payload;
+                          if (currency === CurrencyMode.ALL) {
+                            val = payloadData[`totalValue_${code}`];
+                          } else {
+                            if (code === currency) {
+                              val = payloadData.totalValueAbsolute ?? payloadData.totalValue;
+                            }
+                          }
+
+                          if (!Number.isFinite(val)) return null;
+                          return (
+                            <div key={`tot-${code}`} style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
+                              Valor Total ({code}): {formatCurrency(val, code)}
+                            </div>
+                          );
+                        })}
+                      </div>
                       {currency !== CurrencyMode.ALL && Number.isFinite(dailyChangeValue) && (
                         <div style={{ fontSize: 12, color: dailyChangeValue < 0 ? '#ff4d4f' : '#06d6a0' }}>
                           Variação diária: {formatCurrency(dailyChangeValue, effectiveCurrency)}
