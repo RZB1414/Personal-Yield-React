@@ -44,6 +44,13 @@
     user-select: none;
 }
 
+@media (max-width: 768px) {
+    .loading-dragon {
+        height: 100dvh;
+        object-position: center;
+    }
+}
+
 .loading-text {
     position: absolute;
     bottom: 80px;

@@ -200,11 +200,18 @@ async function getAllDividends(userId, password) {
       "NOTA", "TED RETIRADA", "TED RECEBIDO", "RENDIMENTO RENDA FIXA",
       "PIS E COFINS", "MULTA SALDO NEGATIVO", "CARTAO DE CREDITO",
       "CASHBACK CARTAO", "IOF CASHBACK CARTAO", "TRANSF ENVIADA CONTA DIGITAL",
-      "TRANSF RECEBIDA CONTA DIGITAL", "NEOE26", "TAEE17", "VAMO34", "CTEE29", "SUBSCRIÇÃO"
+      "TRANSF RECEBIDA CONTA DIGITAL", "NEOE26", "TAEE17", "VAMO34", "CTEE29"
+    ]
+
+    const excludedLancamentos = [
+      "FRAÇÕES DE AÇÕES VIVT3",
+      "SUBSCRIÇÃO BRKNSCR09M11 S/ 17",
+      "SUBSCRIÇÃO BRVGIRR09M12 S/ 11",
+      "SOBRAS DE SUBSCRIÇÃO 17                 KNSC15"
     ]
 
     const dividends = unfiltered.filter(d =>
-      d.lancamento !== "FRAÇÕES DE AÇÕES VIVT3" && !excluded.includes(d.ticker)
+      !excludedLancamentos.includes(d.lancamento) && !excluded.includes(d.ticker)
     )
 
     return { unfilteredDividends: unfiltered, dividends }

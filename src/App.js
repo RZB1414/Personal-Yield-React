@@ -12,7 +12,9 @@ import { getBrokers } from './services/brokers';
 import { getAllTotalValues } from './services/totalValues';
 import Home from './components/Home';
 import { getAllCreditCards } from './services/creditCards';
-import sleepingDragon from './assets/sleeping-dragon.jpeg';
+import sleepingDragonLarge from './assets/sleeping-dragon-large.png';
+import sleepingDragonMobile from './assets/sleeping-dragon-9-16.png';
+import sleepingDragonTab from './assets/sleeping-dragon-tab.png';
 
 
 function App() {
@@ -36,9 +38,9 @@ function App() {
         await fetchDividendsStocks()
         setDataLoaded(true)
         const brokersResult = await getBrokers(userId);
-        const totalValuesResult = await getAllTotalValues(userId);  
+        const totalValuesResult = await getAllTotalValues(userId);
         const cardValuesResult = await getAllCreditCards(userId);
-        setCardValues(cardValuesResult);              
+        setCardValues(cardValuesResult);
         setBrokerData(brokersResult);
         setTotalValuesData(totalValuesResult)
         setFetchingAgain(prev => prev + 1)
@@ -53,7 +55,11 @@ function App() {
         <Home onLogin={handleLogin} />
       ) : !dataLoaded ? (
         <div className="loading-container">
-          <img src={sleepingDragon} alt="Sleeping dragon loading" className="loading-dragon" />
+          <picture>
+            <source media="(min-width: 768px) and (max-width: 1024px) and (orientation: portrait)" srcSet={sleepingDragonTab} />
+            <source media="(max-width: 768px)" srcSet={sleepingDragonMobile} />
+            <img src={sleepingDragonLarge} alt="Sleeping dragon loading" className="loading-dragon" />
+          </picture>
           <h1 className="loading-text">Loading your treasuries...</h1>
         </div>
       ) : (
