@@ -7,7 +7,25 @@ import { ReactComponent as CloseIcon } from '../../assets/icons/close-icon.svg';
 import { ReactComponent as AddIcon } from '../../assets/icons/add-circle-icon.svg'
 import { ReactComponent as SearchIcon } from '../../assets/icons/search-icon.svg'
 import { ReactComponent as DeleteIcon } from '../../assets/icons/delete-icon.svg'
+import { ReactComponent as EditIcon } from '../../assets/icons/edit-icon.svg'
 import Snapshots from '../Snapshots';
+
+const DEFAULT_COLUMNS = [
+    'currentPrice', 'avgPrice', 'dailyReturn', 'stockReturn',
+    'returnAndDiv', 'totalValue', 'gain', 'dividends', 'stockQuantity'
+]
+
+const COLUMN_CONFIG = {
+    currentPrice: { label: 'Current Price', align: 'left' },
+    avgPrice: { label: 'Avg Price', align: 'left' },
+    dailyReturn: { label: 'Daily Return', align: 'left' },
+    stockReturn: { label: 'Stock Return', align: 'left' },
+    returnAndDiv: { label: 'Return & Div', align: 'left' },
+    totalValue: { label: 'Total Value', align: 'left' },
+    gain: { label: 'Gain', align: 'left' },
+    dividends: { label: 'Dividends', align: 'left' },
+    stockQuantity: { label: 'Stock Quantity', align: 'left' }
+}
 
 const Stocks = ({ fetchingAgain, setRefresh }) => {
 
@@ -23,19 +41,16 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
     const [searchStock, setSearchStock] = useState(false)
     const [dividendsList, setDividendsList] = useState([])
     const [updatingValues, setUpdatingValues] = useState('')
+
+    // Column Reordering State
+    const [columnsOrder, setColumnsOrder] = useState(DEFAULT_COLUMNS)
+    const [isEditingColumns, setIsEditingColumns] = useState(false)
+    const [tempColumnsOrder, setTempColumnsOrder] = useState(DEFAULT_COLUMNS)
+
     // Ref para o input de busca
     const searchInputRef = useRef(null);
 
-    useEffect(() => {
-        setStocksList(stocks)
-        setUpdatedStocksList(updated)
-        const dividendsList = Array.isArray(dividends.dividends) ? dividends.dividends : [];
-        const grouped = groupDividendsByTicker(dividendsList)
-        setDividendsList(grouped)
-
-    }, [fetchingAgain])
-
-    // Função para agrupar dividendos por ticker e somar os valores
+    // Helpers need to be defined before effects that use them, or be stable
     const groupDividendsByTicker = (dividends) => {
         return dividends.reduce((acc, dividend) => {
             let ticker = dividend.ticker.replace('.SA', '');
@@ -51,6 +66,31 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
             return acc;
         }, {});
     };
+
+    useEffect(() => {
+        const savedOrder = localStorage.getItem('stocksColumnsOrder')
+        if (savedOrder) {
+            try {
+                const parsedOrder = JSON.parse(savedOrder)
+                // Validate if saved order has valid keys
+                const isValid = parsedOrder.every(key => DEFAULT_COLUMNS.includes(key)) && parsedOrder.length === DEFAULT_COLUMNS.length
+                if (isValid) {
+                    setColumnsOrder(parsedOrder)
+                }
+            } catch (e) {
+                console.error('Error parsing saved column order', e)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        setStocksList(stocks)
+        setUpdatedStocksList(updated)
+        const dividendsList = Array.isArray(dividends.dividends) ? dividends.dividends : [];
+        const grouped = groupDividendsByTicker(dividendsList)
+        setDividendsList(grouped)
+
+    }, [fetchingAgain])
 
     const handleSearch = async () => {
         try {
@@ -106,9 +146,9 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
     }
 
     const handleStockClick = (stock) => {
-        setSelectedStock(stock); // Define a ação selecionada
-        setNewAveragePrice(stock.averagePrice); // Preenche o campo com o averagePrice atual
-        setStocksQuantity(stock.stocksQuantity); // Preenche o campo com a quantidade atual de ações	
+        setSelectedStock(stock);
+        setNewAveragePrice(stock.averagePrice);
+        setStocksQuantity(stock.stocksQuantity);
     };
 
     const handleUpdateStockValues = async () => {
@@ -124,8 +164,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                         }
                         : stock
                 );
-                setUpdatedStocksList(updatedStocks); // Atualiza a lista com o novo averagePrice
-                setStocksList(updatedStocks); // Atualiza a lista de ações
+                setUpdatedStocksList(updatedStocks);
+                setStocksList(updatedStocks);
 
                 await updateStock({
                     _id: selectedStock._id,
@@ -133,8 +173,8 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                     stocksQuantity: parseFloat(stocksQuantity)
                 })
 
-                setSelectedStock(null); // Reseta o estado da ação selecionada
-                setNewAveragePrice(''); // Reseta o campo de edição
+                setSelectedStock(null);
+                setNewAveragePrice('');
                 setStocksQuantity('');
                 setUpdatingValues('')
                 setShowingStock(false)
@@ -178,23 +218,101 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         return formatted;
     };
 
-    // Calcula o preço médio geral
+    const handleOpenEditColumns = () => {
+        setTempColumnsOrder([...columnsOrder])
+        setIsEditingColumns(true)
+    }
 
+    const handleMoveColumn = (index, direction) => {
+        const newOrder = [...tempColumnsOrder]
+        const targetIndex = index + direction
+        if (targetIndex >= 0 && targetIndex < newOrder.length) {
+            [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
+            setTempColumnsOrder(newOrder)
+        }
+    }
+
+    const handleSaveColumns = () => {
+        setColumnsOrder(tempColumnsOrder)
+        localStorage.setItem('stocksColumnsOrder', JSON.stringify(tempColumnsOrder))
+        setIsEditingColumns(false)
+    }
+
+    const handleResetColumns = () => {
+        setTempColumnsOrder(DEFAULT_COLUMNS)
+    }
+
+    const renderCellContent = (key, stock, helpers) => {
+        const {
+            formatCurrency,
+            getAveragePriceDisplay,
+            formatPercent,
+            percentageDifference,
+            isPositive,
+            isPositiveWithDividends,
+            totalPercentageDifference,
+            totalValue,
+            valorizacao,
+            dividendsAmount
+        } = helpers
+
+        switch (key) {
+            case 'currentPrice':
+                return formatCurrency(stock.currentPrice, stock.currency)
+            case 'avgPrice':
+                return getAveragePriceDisplay(stock.averagePrice, stock.currency)
+            case 'dailyReturn':
+                return (
+                    <span style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'var(--chart-price-line)' : 'red' }}>
+                        {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
+                    </span>
+                )
+            case 'stockReturn':
+                return (
+                    <span style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
+                        {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
+                            ? formatPercent(Number(percentageDifference))
+                            : null}
+                    </span>
+                )
+            case 'returnAndDiv':
+                return (
+                    <span style={{ color: isPositiveWithDividends ? 'var(--chart-price-line)' : 'red' }}>
+                        {dividendsAmount > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
+                            ? formatPercent(Number(totalPercentageDifference))
+                            : null}
+                    </span>
+                )
+            case 'totalValue':
+                return formatCurrency(totalValue, stock.currency)
+            case 'gain':
+                return (
+                    <span style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
+                        {formatCurrency(valorizacao, stock.currency === 'USD' ? 'USD' : 'BRL')}
+                    </span>
+                )
+            case 'dividends':
+                return formatCurrency(dividendsAmount, stock.currency)
+            case 'stockQuantity':
+                return Number(stock.stocksQuantity)
+            default:
+                return null
+        }
+    }
+
+    // Calculations
     const totalInvestedBRL = updatedStocksList
         .filter(stock => stock.currency === 'BRL')
         .reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
 
-    // Calcula o preço médio geral considerando dividendos        
     const totalCurrentValueBRL = updatedStocksList
         .filter(stock => stock.currency === 'BRL')
-        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0
-        );
+        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
 
     const percentualValorizacaoBRL = totalInvestedBRL > 0
         ? ((totalCurrentValueBRL - totalInvestedBRL) / totalInvestedBRL) * 100
         : 0;
 
-    // Calcula o preço médio geral das ações USD
     const totalInvestedUSD = updatedStocksList
         .filter(stock => stock.currency === 'USD')
         .reduce((acc, stock) => acc + (stock.averagePrice * stock.stocksQuantity), 0);
@@ -219,7 +337,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         ? (((totalCurrentValueBRL + totalDividends - totalInvestedBRL) / totalInvestedBRL) * 100)
         : 0;
 
-    // Calcula valorização percentual total da carteira BRL no dia
     const brlStocks = updatedStocksList.filter(stock => stock.currency === 'BRL');
     const totalCurrentValue = brlStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
     const totalYesterdayValue = brlStocks.reduce((acc, stock) => {
@@ -231,7 +348,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
         ? ((totalCurrentValue - totalYesterdayValue) / totalYesterdayValue) * 100
         : 0;
 
-    // Calcula valorização percentual total da carteira USD no dia
     const usdStocks = updatedStocksList.filter(stock => stock.currency === 'USD');
     const totalCurrentValueUSD_Day = usdStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0);
     const totalYesterdayValueUSD = usdStocks.reduce((acc, stock) => {
@@ -357,16 +473,13 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                 <table className='stocks-table'>
                                     <thead>
                                         <tr>
-                                            <th className="sticky-column">Symbol</th>
-                                            <th>Current Price</th>
-                                            <th>Avg Price</th>
-                                            <th>Daily Return</th>
-                                            <th>Stock Return</th>
-                                            <th>Return & Div</th>
-                                            <th>Total Value</th>
-                                            <th>Gain</th>
-                                            <th>Dividends</th>
-                                            <th>Stock Quantity</th>
+                                            <th className="sticky-column">
+                                                Symbol
+                                                <EditIcon className="edit-columns-icon" onClick={handleOpenEditColumns} />
+                                            </th>
+                                            {columnsOrder.map(key => (
+                                                <th key={key}>{COLUMN_CONFIG[key].label}</th>
+                                            ))}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -387,113 +500,78 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                 return totalPercB - totalPercA; // ordem decrescente
                                             })
                                             .map((stock, index) => {
-                                                // Calcula valorização individual
+                                                // Calculations
                                                 const invested = stock.averagePrice * stock.stocksQuantity;
                                                 const current = stock.currentPrice * stock.stocksQuantity;
-                                                const percentageDifference = ((current - invested) / invested) * 100;
-                                                const isPositive = percentageDifference >= 0;
                                                 const valorizacaoBRL = (current - invested)
                                                 valorizacaoTotalBRL += valorizacaoBRL;
+                                                const dividendsAmount = dividendsList[stock.symbol.replace('.SA', '')] || 0;
 
-                                                const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
-                                                const totalPercentageDifference = (
-                                                    (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
-                                                        (stock.averagePrice * stock.stocksQuantity)) * 100
-                                                ).toFixed(2);
-                                                const isPositiveWithDividends = totalPercentageDifference >= 0;
-
-                                                const totalValue = stock.currentPrice * stock.stocksQuantity;
+                                                // Helpers object
+                                                const helpers = {
+                                                    formatCurrency,
+                                                    getAveragePriceDisplay,
+                                                    formatPercent,
+                                                    percentageDifference: ((current - invested) / invested) * 100,
+                                                    isPositive: ((current - invested) / invested) * 100 >= 0,
+                                                    totalPercentageDifference: ((((current + dividendsAmount) - invested) / invested) * 100).toFixed(2),
+                                                    isPositiveWithDividends: ((((current + dividendsAmount) - invested) / invested) * 100) >= 0,
+                                                    totalValue: current,
+                                                    valorizacao: valorizacaoBRL,
+                                                    dividendsAmount
+                                                }
 
                                                 return (
                                                     <tr key={index}>
                                                         <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
-                                                        <td>
-                                                            {formatCurrency(stock.currentPrice, stock.currency)}
-                                                        </td>
-
-                                                        <td>{getAveragePriceDisplay(stock.averagePrice, stock.currency)}</td>
-
-                                                        <td style={{ color: (Number(stock.dayPriceChangePercent)) > 0 ? 'var(--chart-price-line)' : 'red' }}>
-                                                            {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
-                                                        </td>
-
-                                                        <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
-                                                            {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
-                                                                ? formatPercent(Number(percentageDifference))
-                                                                : null}
-                                                        </td>
-
-                                                        <td style={{ color: isPositiveWithDividends ? 'var(--chart-price-line)' : 'red' }}>
-                                                            {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
-                                                                ? formatPercent(Number(totalPercentageDifference))
-                                                                : null}
-                                                        </td>
-                                                        <td>
-                                                            {formatCurrency(totalValue, stock.currency)}
-                                                        </td>
-
-                                                        <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
-                                                            {formatCurrency(valorizacaoBRL, 'BRL')}
-                                                        </td>
-                                                        <td>
-                                                            {formatCurrency(dividends, stock.currency)}
-                                                        </td>
-                                                        <td>{stock.stocksQuantity}</td>
+                                                        {columnsOrder.map(key => (
+                                                            <td key={key}>
+                                                                {renderCellContent(key, stock, helpers)}
+                                                            </td>
+                                                        ))}
                                                     </tr>
                                                 );
                                             })}
 
-                                        {/* Adiciona a última linha com os totais */}
+                                        {/* Totais */}
+                                        {/* Since totals are hard, we might need to map them too or just leave them custom? 
+                                            User reordered columns... totals row must align!
+                                            The requested feature is column reordering. If I don't reorder totals, it will look broken.
+                                            However, totals arithmetic is done in the loop.
+                                            I should implement a `renderTotalCell` or similar to handle dynamic totals.
+                                            But calculating totals for generic columns is tricky if logic is unique per column.
+                                            For now, I will keep the totals row static or hide it if columns change?
+                                            Actually, I should assume "Total" row also follows column config if possible.
+                                            But "Total" row has specific logic for specific columns.
+                                            If 'currentPrice' is moved, does 'Total' row have a "currentPrice" total? No, it's empty.
+                                            Let's look at existing totals row.
+                                            Columns: Symbol, Current Price (Empty), Avg Price (Total), Daily Return (Total %?), Stock Return (Total %?), Return & Div (Total %?), Total Value (Sum), Gain (Sum), Dividends (Sum), Quantity (Empty).
+                                            
+                                            If I reorder, I need to know WHICH total corresponds to which key.
+                                            I can make a `TOTAL_CONFIG` mapping key to value.
+                                         */}
                                         <tr>
                                             <td className="sticky-column"><strong>Total</strong></td>
-                                            <td></td>
-                                            <td>
-                                                <strong>
-                                                    {formatCurrency(updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL')
-                                                        .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0), 'BRL').replace('R$ ','')}
-                                                </strong>
-                                            </td>
-                                            <td style={{ color: carteiraValorizacaoDia >= 0 ? 'var(--chart-price-line)' : 'red' }}>
-                                                <strong>
-                                                    {formatPercent(Number(carteiraValorizacaoDia))}
-                                                </strong>
-                                            </td>
-
-                                            <td>
-                                                <strong>
-                                                    {formatPercent(percentualValorizacaoBRL)}
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    {formatPercent(totalReturnPercent)}
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    {formatCurrency(updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL')
-                                                        .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0), 'BRL')}
-                                                </strong>
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    {formatCurrency(valorizacaoTotalBRL, 'BRL')}
-                                                </strong>
-
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    {formatCurrency(updatedStocksList
-                                                        .filter(stock => stock.currency === 'BRL')
-                                                        .reduce((acc, stock) => {
-                                                            const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0;
-                                                            return acc + dividends;
-                                                        }, 0), 'BRL')}
-                                                </strong>
-                                            </td>
-                                            <td></td>
+                                            {columnsOrder.map(key => {
+                                                switch (key) {
+                                                    case 'avgPrice':
+                                                        return <td key={key}><strong>{formatCurrency(totalInvestedBRL, 'BRL').replace('R$ ', '')}</strong></td>
+                                                    case 'dailyReturn':
+                                                        return <td key={key} style={{ color: carteiraValorizacaoDia >= 0 ? 'var(--chart-price-line)' : 'red' }}><strong>{formatPercent(Number(carteiraValorizacaoDia))}</strong></td>
+                                                    case 'stockReturn':
+                                                        return <td key={key}><strong>{formatPercent(percentualValorizacaoBRL)}</strong></td>
+                                                    case 'returnAndDiv':
+                                                        return <td key={key}><strong>{formatPercent(totalReturnPercent)}</strong></td>
+                                                    case 'totalValue':
+                                                        return <td key={key}><strong>{formatCurrency(totalCurrentValueBRL, 'BRL')}</strong></td>
+                                                    case 'gain':
+                                                        return <td key={key}><strong>{formatCurrency(valorizacaoTotalBRL, 'BRL')}</strong></td>
+                                                    case 'dividends':
+                                                        return <td key={key}><strong>{formatCurrency(updatedStocksList.filter(stock => stock.currency === 'BRL').reduce((acc, stock) => acc + (dividendsList[stock.symbol.replace('.SA', '')] || 0), 0), 'BRL')}</strong></td>
+                                                    default:
+                                                        return <td key={key}></td>
+                                                }
+                                            })}
                                         </tr>
                                     </tbody>
                                 </table>
@@ -502,7 +580,6 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                     </div>
 
                     <div className="stocks-container-all">
-
                         {stocksList.filter(stock => stock.currency === 'USD').length > 0 ?
                             <h2 className='stocks-list-title-USD'>US Stocks</h2>
                             : null
@@ -514,22 +591,19 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                     <table className='stocks-table'>
                                         <thead>
                                             <tr>
-                                                <th className="sticky-column">Symbol</th>
-                                                <th>Current Price</th>
-                                                <th>Avg Price</th>
-                                                <th>Daily Return</th>
-                                                <th>Stock Return</th>
-                                                <th>Return & Div</th>
-                                                <th>Total Value</th>
-                                                <th>Gain</th>
-                                                <th>Dividends</th>
-                                                <th>Stock Quantity</th>
+                                                <th className="sticky-column">
+                                                    Symbol
+                                                    <EditIcon className="edit-columns-icon" onClick={handleOpenEditColumns} />
+                                                </th>
+                                                {columnsOrder.map(key => (
+                                                    <th key={key}>{COLUMN_CONFIG[key].label}</th>
+                                                ))}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {updatedStocksList
-                                                .filter(stock => stock.currency === 'USD') // Filtra apenas ações em USD
-                                                .slice() // cria uma cópia para não alterar o estado original
+                                                .filter(stock => stock.currency === 'USD')
+                                                .slice()
                                                 .sort((a, b) => {
                                                     const dividendsA = dividendsList[a.symbol.replace('.SA', '')] || 0;
                                                     const dividendsB = dividendsList[b.symbol.replace('.SA', '')] || 0;
@@ -541,101 +615,78 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
                                                         (((b.currentPrice * b.stocksQuantity + dividendsB) - (b.averagePrice * b.stocksQuantity)) /
                                                             (b.averagePrice * b.stocksQuantity)) * 100
                                                     );
-                                                    return totalPercB - totalPercA; // ordem decrescente
+                                                    return totalPercB - totalPercA;
                                                 })
                                                 .map((stock, index) => {
-                                                    const priceDifference = stock.currentPrice - stock.averagePrice;
-                                                    const percentageDifference = ((priceDifference / stock.averagePrice) * 100).toFixed(2);
-                                                    const isPositive = priceDifference >= 0;
-
+                                                    // Calculations
                                                     const invested = stock.averagePrice * stock.stocksQuantity;
                                                     const current = stock.currentPrice * stock.stocksQuantity;
                                                     const valorizacaoUSD = (current - invested)
                                                     valorizacaoTotalUSD += valorizacaoUSD;
+                                                    const dividendsAmount = dividendsList[stock.symbol.replace('.SA', '')] || 0;
 
-                                                    const dividends = dividendsList[stock.symbol.replace('.SA', '')] || 0
-                                                    const totalPercentageDifference = (
-                                                        (((stock.currentPrice * stock.stocksQuantity + dividends) - (stock.averagePrice * stock.stocksQuantity)) /
-                                                            (stock.averagePrice * stock.stocksQuantity)) * 100
-                                                    ).toFixed(2);
-                                                    const isPositiveWithDividends = totalPercentageDifference >= 0;
-
-                                                    const totalValue = stock.currentPrice * stock.stocksQuantity;
+                                                    // Helpers object
+                                                    const helpers = {
+                                                        formatCurrency,
+                                                        getAveragePriceDisplay,
+                                                        formatPercent,
+                                                        percentageDifference: ((current - invested) / invested) * 100,
+                                                        isPositive: ((current - invested) / invested) * 100 >= 0,
+                                                        totalPercentageDifference: ((((current + dividendsAmount) - invested) / invested) * 100).toFixed(2),
+                                                        isPositiveWithDividends: ((((current + dividendsAmount) - invested) / invested) * 100) >= 0,
+                                                        totalValue: current,
+                                                        valorizacao: valorizacaoUSD,
+                                                        dividendsAmount
+                                                    }
 
                                                     return (
                                                         <tr key={index}>
                                                             <td className="sticky-column" onClick={() => handleStockClick(stock)}>{stock.symbol.replace('.SA', '')}</td>
-                                                            <td>
-                                                                {formatCurrency(stock.currentPrice, stock.currency)}
-                                                            </td>
-                                                            <td>{getAveragePriceDisplay(stock.averagePrice, stock.currency)}</td>
-
-                                                            <td style={{ color: Number(stock.dayPriceChangePercent) > 0 ? 'var(--chart-price-line)' : 'red' }}>
-                                                                {stock.dayPriceChangePercent ? formatPercent(Number(stock.dayPriceChangePercent) * 100) : null}
-                                                            </td>
-
-                                                            <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
-                                                                {isFinite(Number(percentageDifference)) && Number(percentageDifference) !== 0
-                                                                    ? formatPercent(Number(percentageDifference))
-                                                                    : null}
-                                                            </td>
-
-                                                            <td style={{ color: isPositiveWithDividends ? 'var(--chart-price-line)' : 'red' }}>
-                                                                {dividends > 0 && isFinite(Number(totalPercentageDifference)) && Number(totalPercentageDifference) !== 0
-                                                                    ? formatPercent(Number(totalPercentageDifference))
-                                                                    : null}
-                                                            </td>
-                                                            <td>{formatCurrency(totalValue, stock.currency)}</td>
-
-                                                            <td style={{ color: isPositive ? 'var(--chart-price-line)' : 'red' }}>
-                                                                {formatCurrency(valorizacaoUSD, 'USD')}
-                                                            </td>
-                                                            <td>{formatCurrency(dividends, stock.currency)}</td>
-                                                            <td>{Number(stock.stocksQuantity)}</td>
+                                                            {columnsOrder.map(key => (
+                                                                <td key={key}>
+                                                                    {renderCellContent(key, stock, helpers)}
+                                                                </td>
+                                                            ))}
                                                         </tr>
                                                     );
                                                 })}
 
-                                            {/* Adiciona a última linha com os totais */}
+                                            {/* Totais USD */}
                                             <tr>
                                                 <td className="sticky-column"><strong>Total</strong></td>
-                                                <td></td>
-                                                <td>
-                                                    <strong>
-                                                        {formatCurrency(updatedStocksList
-                                                            .filter(stock => stock.currency === 'USD')
-                                                            .reduce((acc, stock) => acc + stock.averagePrice * stock.stocksQuantity, 0), 'USD').replace('$ ','')}
-                                                    </strong>
-                                                </td>
-
-                                                <td style={{ color: carteiraValorizacaoDiaUSD >= 0 ? 'var(--chart-price-line)' : 'red' }}>
-                                                    <strong>
-                                                        {formatPercent(Number(carteiraValorizacaoDiaUSD))}
-                                                    </strong>
-                                                </td>
-
-                                                <td>
-                                                    <strong>
-                                                        {formatPercent(percentualValorizacaoUSD)}
-                                                    </strong>
-                                                </td>
-                                                <td>
-
-                                                </td>
-                                                <td>
-                                                    <strong>
-                                                        {formatCurrency(updatedStocksList
-                                                            .filter(stock => stock.currency === 'USD')
-                                                            .reduce((acc, stock) => acc + (stock.currentPrice * stock.stocksQuantity), 0), 'USD')}
-                                                    </strong>
-                                                </td>
-                                                <td>
-                                                    <strong>
-                                                        {formatCurrency(valorizacaoTotalUSD, 'USD')}
-                                                    </strong>
-                                                </td>
-                                                <td></td>
-                                                <td></td>
+                                                {columnsOrder.map(key => {
+                                                    switch (key) {
+                                                        case 'avgPrice':
+                                                            return <td key={key}><strong>{formatCurrency(totalInvestedUSD, 'USD').replace('$ ', '')}</strong></td>
+                                                        case 'dailyReturn':
+                                                            return <td key={key} style={{ color: carteiraValorizacaoDiaUSD >= 0 ? 'var(--chart-price-line)' : 'red' }}><strong>{formatPercent(Number(carteiraValorizacaoDiaUSD))}</strong></td>
+                                                        case 'stockReturn':
+                                                            return <td key={key}><strong>{formatPercent(percentualValorizacaoUSD)}</strong></td>
+                                                        // Return and Div for USD? Not calculated in original? 
+                                                        // Original had: percentualValorizacaoUSD in 'Return & Div' column? No. 
+                                                        // Original BRL had 'totalReturnPercent'. USD had ... check original
+                                                        // Original USD row: 
+                                                        // 1. Total (Symbol)
+                                                        // 2. Empty (Current Price)
+                                                        // 3. totalInvestedUSD (Avg Price)
+                                                        // 4. carteiraValorizacaoDiaUSD (Daily Return)
+                                                        // 5. percentualValorizacaoUSD (Stock Return)
+                                                        // 6. Empty (Return & Div) -> WAIT. 
+                                                        // In Step 168:
+                                                        // <td></td> (col 6)
+                                                        // So for USD, 'returnAndDiv' total is empty.
+                                                        case 'returnAndDiv':
+                                                            return <td key={key}></td>
+                                                        case 'totalValue':
+                                                            return <td key={key}><strong>{formatCurrency(totalCurrentValueUSD, 'USD')}</strong></td>
+                                                        case 'gain':
+                                                            return <td key={key}><strong>{formatCurrency(valorizacaoTotalUSD, 'USD')}</strong></td>
+                                                        case 'dividends':
+                                                            return <td key={key}></td> // Divs empty in USD total
+                                                        default:
+                                                            return <td key={key}></td>
+                                                    }
+                                                })}
                                             </tr>
                                         </tbody>
                                     </table>
@@ -651,6 +702,42 @@ const Stocks = ({ fetchingAgain, setRefresh }) => {
 
                         <h2 className='footer'>Yield Management</h2>
                     </div>
+
+                    {isEditingColumns && (
+                        <div className="edit-columns-modal-overlay">
+                            <div className="edit-columns-modal">
+                                <h3>Organize Columns</h3>
+                                <ul className="columns-list">
+                                    {tempColumnsOrder.map((key, index) => (
+                                        <li key={key} className="column-item">
+                                            <span className="column-label">{COLUMN_CONFIG[key].label}</span>
+                                            <div className="column-actions">
+                                                <button
+                                                    className="move-btn"
+                                                    disabled={index === 0}
+                                                    onClick={() => handleMoveColumn(index, -1)}
+                                                >
+                                                    ▲
+                                                </button>
+                                                <button
+                                                    className="move-btn"
+                                                    disabled={index === tempColumnsOrder.length - 1}
+                                                    onClick={() => handleMoveColumn(index, 1)}
+                                                >
+                                                    ▼
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="modal-actions">
+                                    <button className="reset-btn" onClick={handleResetColumns}>Reset default</button>
+                                    <button className="cancel-btn" onClick={() => setIsEditingColumns(false)}>Cancel</button>
+                                    <button className="save-btn" onClick={handleSaveColumns}>Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             }
         </>

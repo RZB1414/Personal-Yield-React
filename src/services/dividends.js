@@ -322,6 +322,7 @@ async function readFile(file, tipo, password) {
       "Pagamento para BANCO XP S/A": "CARTAO DE CREDITO",
       "Pagamento agendado para BANCO XP S/A": "CARTAO DE CREDITO",
       "RESGATE Trend Investback FIC FIRF Simples": "CASHBACK CARTAO",
+      "RESGATE TREND INB V FIC FIRF Simples RL": "CASHBACK CARTAO",
       "IOF S/RESGATE FUNDOS Trend Investback FIC FIRF Simples": "IOF CASHBACK CARTAO",
       "Transferência enviada para a conta digital": "TRANSF ENVIADA CONTA DIGITAL",
       "Transferência recebida da conta digital": "TRANSF RECEBIDA CONTA DIGITAL"
